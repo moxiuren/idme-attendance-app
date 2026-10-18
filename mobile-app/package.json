@@ -23,6 +23,7 @@
     "test:calendar": "node tools/test-report-calendar.mjs",
     "test:sebab": "node tools/build-probe.mjs && node tools/test-sebab-refresh.mjs",
     "verify:live": "node tools/build-probe.mjs && node tools/verify-live.mjs",
+    "verify:update": "node tools/verify-live-update.mjs",
     "check:handfont": "node tools/check-hand-font.mjs"
   },
   "dependencies": {
