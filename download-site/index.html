@@ -13,6 +13,33 @@
 <link rel="icon" href="assets/icon-64.png" sizes="64x64">
 <link rel="apple-touch-icon" href="assets/icon-192.png">
 <link rel="stylesheet" href="styles.css">
+
+<!-- ══════════════ 访问统计：GoatCounter ══════════════
+     为什么用它：无 Cookie、不建用户画像、不跨站追踪，IP 每日加盐哈希后即弃，
+     所以不需要弹同意框 —— 这一点对「老师点开就下载」的场景很重要，
+     多一个弹窗就少一批下载。
+
+     为什么用 JS 动态注入而不是直接写 <script async>：
+     要能按条件跳过。本地 8899 端口自测、以及 file:// 离线打开时不该产生数据，
+     否则真实下载量会被测试流量稀释，而 release 下载计数已经吃过这个亏。
+
+     ★ 换站点码只改下面这一处 GOATCOUNTER_CODE。 -->
+<script>
+(function () {
+  var CODE = 'moxiuren';   // ← 注册后替换成自己的子域前缀
+  if (CODE.indexOf('GOATCOUNTER') === 0) return;          // 未配置就整个不加载
+
+  var host = location.hostname;
+  var isLocal = /^(localhost|127\.0\.0\.1|\[::1\]|0\.0\.0\.0)$/.test(host);
+  if (location.protocol !== 'https:' || isLocal) return;   // 本地与离线跳过
+
+  var s = document.createElement('script');
+  s.async = true;
+  s.src = 'https://gc.zgo.at/count.js';
+  s.setAttribute('data-goatcounter', 'https://' + CODE + '.goatcounter.com/count');
+  document.head.appendChild(s);
+})();
+</script>
 </head>
 <body>
 
@@ -60,7 +87,9 @@
       <div class="hero-side">
         <a class="btn-dl" id="dlTop"
            href="https://github.com/moxiuren/idme-attendance-app/releases/download/v1.3/idMe-v1.3.apk"
-           rel="noopener" download>
+           rel="noopener" download
+           data-goatcounter-click="dl-top"
+           data-goatcounter-title="首屏下载按钮">
           <span class="btn-dl-ico" aria-hidden="true">
             <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor"
                  stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
@@ -182,7 +211,9 @@
     </div>
     <a class="btn-dl btn-dl-sm" id="dlBottom"
        href="https://github.com/moxiuren/idme-attendance-app/releases/download/v1.3/idMe-v1.3.apk"
-       rel="noopener" download>
+       rel="noopener" download
+       data-goatcounter-click="dl-bottom"
+       data-goatcounter-title="页尾下载按钮">
       <span class="btn-dl-main" data-i18n="dl">Muat Turun APK</span>
     </a>
   </section>
