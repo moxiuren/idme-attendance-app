@@ -1,0 +1,46 @@
+{
+  "name": "idme-mobile-app",
+  "version": "1.0.0",
+  "description": "idMe / MOEIS Mobile Terminal Console",
+  "private": true,
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "build:android": "vite build && cap copy android",
+    "preview": "vite preview",
+    "lint": "eslint src",
+    "audit:i18n": "node tools/i18n-audit.mjs",
+    "audit:lines": "python ../docs/line-budget-audit.py",
+    "audit:contrast": "python ../docs/contrast-audit.py",
+    "audit:touch": "python ../docs/touch-target-audit.py",
+    "gate": "npm run lint && npm run test:draft && npm run test:flow && npm run test:calendar && npm run test:sebab && npm run test:updater && npm run test:credstore && npm run check:handfont && npm run audit:i18n && npm run audit:lines && npm run audit:contrast && npm run audit:touch && npm run build:android",
+    "test:updater": "node tools/test-updater.mjs",
+    "test:credstore": "node tools/test-credstore.mjs",
+    "publish": "node tools/publish-release.mjs",
+    "probe": "node tools/build-probe.mjs",
+    "test:flow": "node tools/build-probe.mjs && node tools/test-submit-flow.mjs",
+    "test:draft": "node tools/build-probe.mjs && node tools/test-draft.mjs",
+    "test:calendar": "node tools/test-report-calendar.mjs",
+    "test:sebab": "node tools/build-probe.mjs && node tools/test-sebab-refresh.mjs",
+    "verify:live": "node tools/build-probe.mjs && node tools/verify-live.mjs",
+    "check:handfont": "node tools/check-hand-font.mjs"
+  },
+  "dependencies": {
+    "@aparajita/capacitor-secure-storage": "^6.0.1",
+    "@capacitor/android": "^6.2.0",
+    "@capacitor/app": "^6.0.3",
+    "@capacitor/core": "^6.2.0",
+    "@capacitor/filesystem": "^6.0.2",
+    "@capacitor/preferences": "^6.0.3",
+    "@capacitor/toast": "^6.0.3",
+    "vue": "^3.5.13"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^6.2.0",
+    "@eslint/js": "^10.0.1",
+    "@vitejs/plugin-vue": "^5.2.1",
+    "eslint": "^10.12.0",
+    "globals": "^17.13.0",
+    "vite": "^6.2.0"
+  }
+}

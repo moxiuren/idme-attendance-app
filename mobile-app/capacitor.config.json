@@ -1,0 +1,13 @@
+{
+  "appId": "my.gov.moe.idme.attendance",
+  "appName": "idMe Attendance",
+  "webDir": "dist",
+  "plugins": {
+    "CapacitorHttp": {
+      "enabled": true
+    }
+  },
+  "server": {
+    "androidScheme": "https"
+  }
+}

@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>idMe Attendance</title>
+  <!-- theme-color 必须与 App 纸张底色一致。
+       原值 #0a0c10（深黑）是旧深色主题的残留：真机上状态栏会是黑的，
+       而页面是米色纸张，顶部出现一条割裂的黑带。 -->
+  <meta name="theme-color" content="#fcf8ec" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <!-- 启动前的首帧底色：与 body 背景同色，避免白闪 -->
+  <style>
+    html, body { margin: 0; padding: 0; background: #fcf8ec; }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

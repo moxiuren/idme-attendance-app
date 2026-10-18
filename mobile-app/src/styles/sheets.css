@@ -1,0 +1,470 @@
+/* 底部抽屉：假因分类 chips / 原因列表 / 月份选择 */
+
+/* ==================== 底部抽屉 ==================== */
+.sheet-mask {
+  position: fixed;
+  inset: 0;
+  background: rgba(60, 50, 32, .30);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 100;
+}
+/* 抽屉像从本子下方抽出来的一页纸 */
+.sheet {
+  width: 100%;
+  max-width: 560px;
+  max-height: 86vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--paper);
+  border-top: 2.8px solid var(--ink);
+  /* 左右两个角**不相等**：22px / 30px。
+     原值是 26px 26px —— 完全对称，一眼就能看出是照着设计规范填的。
+     抽屉是一页从本子里抽出来的纸，抽出时被手带了一下，边角不会分毫不差。
+     差异取 8px：够看出不对称，又不至于歪到像渲染错误。 */
+  border-radius: 22px 30px 0 0;
+  padding: 12px 16px calc(16px + env(safe-area-inset-bottom));
+  /* 阴影由「模糊光晕」改为「实色厚度」，与全应用统一。
+     旧值 0 -10px 26px 是柔和投影 —— 那是「浮起的卡片」的语言（Material 式），
+     而本应用的隐喻是「纸叠纸」，纸压纸只会留下一条硬边，不会散成一圈雾。
+     3px 而非 10px：抽屉高 86vh，硬边太高会变成一条厚重的黑带。 */
+  box-shadow: 0 -3px 0 rgba(60, 50, 32, .18);
+}
+.sheet-sm { max-height: 70vh; }
+/* 拖拽把手 */
+.sheet::before {
+  content: '';
+  display: block;
+  width: 44px;
+  height: 5px;
+  margin: 0 auto 12px;
+  border-radius: 3px;
+  background: var(--line);
+  flex-shrink: 0;
+}
+.sheet-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.sheet-title { font-size: 19px; font-weight: 700; color: var(--ink); }
+.sheet-head-acts { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.sheet-sub   { font-size: 13px; color: var(--text-dim); margin-top: 2px; }
+.sheet-foot { padding-top: 12px; }
+.sheet-foot-col { display: flex; flex-direction: column; gap: 8px; }
+
+/* 抽屉关闭：纯图标（打叉）。
+   原为「Tutup」文字按钮，但 .icon-btn 是透明底、文字看起来像裸标签；
+   换成图标后头部更干净，且保留 44px 触控面积与无障碍名称。 */
+.sheet-close {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--tap-min);
+  height: var(--tap-min);
+  padding: 0;
+  color: var(--text-dim);
+  background: #fff;
+  border: 2.2px solid var(--line);
+  border-radius: var(--r-pill);
+  box-shadow: var(--mk-sm);
+  font-family: inherit;
+  cursor: pointer;
+}
+.sheet-close:active { background: var(--blue-fill); color: var(--blue-ink); box-shadow: none; }
+
+/* ==================== 确认对话框 ====================
+   居中卡片，与底部抽屉刻意区分：
+   抽屉 = 「选东西」（点遮罩即关）；对话框 = 「做决定」（必须明确选一边）。 */
+.dialog-mask {
+  position: fixed;
+  inset: 0;
+  background: rgba(60, 50, 32, .38);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 18px;
+  z-index: 200;            /* 高于抽屉：可从抽屉之上弹出 */
+}
+.dialog {
+  width: 100%;
+  max-width: 420px;
+  max-height: 80vh;
+  overflow-y: auto;
+  background: var(--paper);
+  border: 2.8px solid var(--ink);
+  /* 用纸张循环里的 p2（四个角各不相同），不再用统一的 --r-sk。
+     对话框是全应用最「重」的元素（2.8px 黑边 + 最大阴影），
+     这里若还套一个规整值，整屏最显眼的东西反而最像模板。
+     阴影方向改为 3px/2px —— 与其它纸张一样，压向某一侧而非正下方。 */
+  border-radius: var(--r-p2);
+  box-shadow: 3px 2px 0 rgba(46, 42, 36, .22);
+  padding: 18px 18px 16px;
+}
+.dialog-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.dialog-icon {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border: 2.2px solid;
+  border-radius: var(--r-pill);
+}
+.dialog-icon-warn   { background: var(--amber-bg); border-color: var(--amber-edge); color: var(--amber); }
+.dialog-icon-danger { background: var(--red-bg);   border-color: var(--red-edge);   color: var(--red); }
+.dialog-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1.25;
+  min-width: 0;
+  word-break: break-word;
+}
+/* 消息可能带换行（confirmPdpr 等用 \n 分段），故 white-space: pre-line */
+.dialog-msg {
+  margin: 0 0 16px;
+  font-size: 14.5px;
+  line-height: 1.5;
+  color: var(--ink-soft);
+  white-space: pre-line;
+}
+.dialog-foot { display: flex; gap: 10px; }
+
+/* ==================== 月度报表抽屉 ====================
+   内容较高（月份栏 + 汇总 + 月历 + 图例 + 按钮），
+   故让中间区域独立滚动，月份栏与底部动作按钮常驻可见。 */
+.sheet-report { max-height: 90vh; }
+.datebar-sheet { padding: 0 0 10px; }
+.sheet-body { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; }
+.report-loading {
+  padding: 40px 12px;
+  text-align: center;
+  color: var(--text-dim);
+  font-size: 14px;
+}
+
+/* 灰按钮旁的一行说明（如「Bulan belum tamat」）。
+   字号小、居中、贴着按钮上方 —— 只解释「为什么按不动」，不抢视觉重心。
+   配色沿用已审计过的 text-dim on paper 组合。 */
+.report-hint {
+  margin: 0 0 8px;
+  text-align: center;
+  color: var(--text-dim);
+  font-size: 12.5px;
+  line-height: 1.3;
+}
+
+/* ---- 月历 ---- */
+.cal { margin-top: 12px; }
+.cal-head,
+.cal-grid {
+  display: grid;
+  /* 同 .stats：必须用 minmax(0,1fr)，否则「31/31」等不可折行内容会把网格撑宽 */
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 4px;
+}
+.cal-wd {
+  padding-bottom: 2px;
+  text-align: center;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--text-dim);
+}
+.cal-cell {
+  position: relative;
+  min-width: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  min-height: 46px;
+  padding: 3px 1px;
+  background: var(--surface);
+  border: 1.8px solid var(--line);
+  border-radius: var(--r-sk-sm);
+  color: var(--ink);
+}
+.cal-blank { background: transparent; border-color: transparent; }
+.cal-day { font-size: 11px; font-weight: 700; line-height: 1; color: var(--text-dim); }
+.cal-val {
+  font-size: 11.5px;
+  font-weight: 700;
+  line-height: 1.1;
+  font-family: var(--f-num);
+  white-space: nowrap;
+}
+/* 有缺席的日子：数字转红，一眼看出问题日 */
+.cal-val-bad { color: var(--red); }
+/* 假期：底色用中性纸色保证对比度，官方图例色只作为右上角圆点，
+   避免官方那套高饱和填充色（#ff5050 等）压垮文字对比度 */
+.cal-holiday { background: var(--paper-2); border-color: var(--paper-edge); }
+.cal-holiday::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--hol, var(--line));
+}
+/* 未录入（未来日期）：虚线边框 + 无数字值。
+   刻意**不**把日号压到 --line 那种低对比度 —— 那是不可读的假区分 */
+.cal-empty { background: transparent; border-style: dashed; }
+.cal-note { font-size: 9.5px; line-height: 1.1; color: var(--text-dim); }
+.cal-alert { border-color: var(--red-edge); }
+.cal-today { border-color: var(--ink); border-width: 2.4px; }
+
+/* 可点的日期格：用 <button> 渲染（见 ReportSheet.vue），但外观与只读格完全一致，
+   只多一个按压反馈 —— 点它就跳到那天的点名名单。
+   空白格与未来日期仍是 <span>，不进 tab 序，也不需要任何说明。 */
+.cal-cell-btn {
+  font: inherit;
+  appearance: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.cal-cell-btn:active {
+  background: var(--paper-2);
+  border-color: var(--paper-edge);
+}
+
+/* ---- 图例（只列本月实际出现的假期类型）---- */
+.cal-legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 2px dashed var(--line);
+  font-size: 11px;
+  color: var(--text-dim);
+}
+.cal-legend-t { font-weight: 700; color: var(--ink); }
+.cal-legend-i { display: inline-flex; align-items: center; gap: 4px; }
+.cal-dot {
+  flex-shrink: 0;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(46, 42, 36, .25);
+}
+
+/* 分类 chips —— P0-4：由 42px 提到 44px */
+.chips {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 10px;
+  margin-bottom: 10px;
+  border-bottom: 2px solid var(--line);
+}
+.chips::-webkit-scrollbar { display: none; }
+.chip {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-height: var(--tap-min);
+  padding: 0 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-dim);
+  background: #fff;
+  border: 2.2px solid var(--line);
+  border-radius: var(--r-pill);
+  font-family: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.chip-on {
+  color: var(--blue-ink);
+  background: var(--blue-fill);
+  border-color: var(--blue-edge);
+}
+.chip-count {
+  font-size: 11px;
+  opacity: .7;
+}
+
+/* 原因列表 */
+.reason-list {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 120px;
+}
+.reason {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  min-height: 54px;
+  padding: 10px 14px;
+  background: #fff;
+  border: 2.2px solid var(--line);
+  border-radius: var(--r-sk-sm);
+  box-shadow: var(--mk-sm);
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.reason:active { transform: translate(1px, 1px); box-shadow: none; }
+.reason-on {
+  border-color: var(--amber-edge);
+  background: var(--amber-bg);
+}
+.reason-name { font-size: 15px; font-weight: 600; line-height: 1.3; color: var(--ink); }
+.reason-code { flex-shrink: 0; font-size: 12px; color: var(--text-dim); }
+
+/* 月份选择 */
+.month-pick {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.month-pick .input-sm { flex: 1; }
+
+.meta-line {
+  margin: 14px 0 0;
+  font-size: 12px;
+  color: var(--text-dim);
+  text-align: center;
+}
+/* 版本号：比 dictMeta 更弱化 —— 它是排查用的，不是给教师日常看的。
+   同一行还挂着作者落款（见 SettingsSheet.vue），二者同属「这个构建的元信息」。 */
+.ver-line {
+  margin: 4px 0 0;
+  font-size: 11px;
+  color: var(--text-dim);
+  opacity: .7;
+  text-align: center;
+}
+/* 分隔符：留白比字宽更重要，否则「1.0.0·小莫出品」会挤成一团 */
+.ver-sep {
+  margin: 0 6px;
+  opacity: .6;
+}
+
+/* ==================== 应用内更新 ==================== */
+.upd-body { padding: 2px 0 4px; }
+.upd-line {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  margin: 0 0 10px;
+  font-size: 15px;
+  line-height: 1.45;
+  color: var(--ink);
+}
+.upd-strong { font-weight: 700; }
+.upd-dim { color: var(--text-dim); }
+.upd-ok { color: var(--green); font-weight: 600; }
+.upd-err { color: var(--red); font-weight: 600; }
+/* 图标与首行文字对齐：18px 图标 + 15px 正文，顶部偏 1px 才压在中线上 */
+.upd-ic { margin-top: 1px; }
+
+/* 更新说明：手账里的「贴条」，左边缘一道琥珀竖线代替方框 */
+.upd-notes {
+  margin: 0 0 12px;
+  padding: 8px 0 8px 11px;
+  border-left: 3px solid var(--amber-edge);
+  background: linear-gradient(to right, var(--amber-bg) 0%, transparent 92%);
+}
+.upd-notes-h {
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: .02em;
+  color: var(--amber);
+  margin-bottom: 3px;
+}
+.upd-notes-b {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--ink-soft);
+  white-space: pre-line;   /* 清单里的 \n 要真的换行 */
+}
+
+/* 进度条：凹槽 + 填充，两端不对称圆角（与全应用的手绘语言一致） */
+.upd-prog-wrap { margin: 0 0 12px; }
+.upd-prog {
+  position: relative;
+  height: 12px;
+  overflow: hidden;
+  background: var(--paper-2);
+  border: 2px solid var(--line);
+  border-radius: 9px 5px 8px 6px / 6px 9px 5px 8px;
+}
+.upd-prog-fill {
+  height: 100%;
+  width: 0;
+  background: var(--blue-fill);
+  border-right: 2px solid var(--blue-edge);
+  transition: width .18s linear;   /* 原生每 1% 推一次，180ms 插值刚好连贯不抖 */
+}
+/* 总大小未知：宽度固定，靠动画左右扫，表示「在动但不知道到哪」 */
+.upd-prog-na .upd-prog-fill {
+  width: 35%;
+  border-right: none;
+  animation: upd-sweep 1.15s ease-in-out infinite;
+}
+@keyframes upd-sweep {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(300%); }
+}
+/* 尊重系统「减少动态效果」：不确定态退化为静止的 35% 条 */
+@media (prefers-reduced-motion: reduce) {
+  .upd-prog-na .upd-prog-fill { animation: none; transform: none; }
+  .upd-prog-fill { transition: none; }
+}
+.upd-prog-txt {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 5px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-dim);
+}
+.upd-prog-size { font-variant-numeric: tabular-nums; opacity: .8; }
+
+/* 校验说明：比正文更弱化，它是「为什么可以放心装」的注脚，不是操作提示 */
+.upd-sha {
+  margin: 10px 0 0;
+  font-size: 11.5px;
+  color: var(--text-dim);
+  opacity: .75;
+}
+
+/* 权限引导：琥珀底，与「需要用户额外做一步」的语义一致 */
+.upd-perm {
+  margin: 4px 0 0;
+  padding: 9px 11px;
+  font-size: 13px;
+  line-height: 1.45;
+  font-weight: 600;
+  color: var(--amber);
+  background: var(--amber-bg);
+  border: 2px solid var(--amber-edge);
+  border-radius: var(--r-sk-sm);
+}

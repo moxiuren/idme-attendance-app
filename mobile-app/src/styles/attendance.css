@@ -1,0 +1,276 @@
+/* 出勤主区：学生列表（含三态样式）/ 吸底操作栏 / 提示条 */
+
+/* ==================== 学生列表 ==================== */
+.list {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 12px 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+/* 空态：原先只有一行居中灰字，是最像「占位符」的地方。
+   现在给一张随手贴上去的便签：图标 + 一句事实 + 一句下一步。
+   刻意让便签**歪 1.5 度**、圆角四角不等 —— 正正方方贴在正中，
+   是模板占位符的长相；人手贴便签从来不会贴得那么正。
+   flex:1 让它在名单为空时占满滚动区并垂直居中，
+   名单有内容时该节点根本不渲染，不影响行布局。 */
+.empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 40px 24px;
+  text-align: center;
+}
+.empty-ic {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  color: var(--ink-soft);
+  background: var(--paper-2);
+  border: 2.2px solid var(--line);
+  border-radius: var(--r-p2);
+  box-shadow: var(--mk-p2);
+  /* 歪一点点。用 rotate 而非 skew：便签是被贴歪的，不是被拉斜的。 */
+  transform: rotate(-1.5deg);
+}
+/* 加载态：唯一允许动的东西。
+   它不是装饰性动画 —— 图标转圈表示「正在等数据」这一真实状态。
+   把旋转放在内层 span 上，与外层的 -1.5deg 分开，
+   否则 rotate 会互相覆盖，转起来便签就不歪了。 */
+.empty-ic-load {
+  color: var(--blue-ink);
+  background: var(--blue-fill);
+  border-color: var(--blue-edge);
+  transform: rotate(1.5deg);
+}
+/* 注意：本文件是**全局** CSS（在 main.js 里整体 import），不是 <style scoped>。
+   所以这里写普通后代选择器 .empty-ic-load .ic 即可 ——
+   `:deep()` 只在 scoped style 里由 Vue 编译期改写，写在全局 CSS 里会原样输出、
+   浏览器不识别，整条动画规则会静默失效。 */
+.empty-ic-load .ic { animation: spin 1.4s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .empty-ic-load .ic { animation: none; }
+}
+
+.empty-t {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink);
+}
+.empty-hint {
+  margin: 0;
+  max-width: 250px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-dim);
+}
+
+/* 学生行：白纸卡片 + 手绘边框 + 马克笔厚度 */
+.row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 62px;
+  padding: 10px 14px;
+  background: var(--surface);
+  border: 2.2px solid var(--line);
+  border-radius: var(--r-sk-sm);
+  box-shadow: var(--mk-sm);
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: transform .06s ease;
+  /* 长按进入批量选择：禁掉文本选中与系统长按菜单，否则会弹「复制/全选」 */
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+.row:active { transform: translate(1px, 1px); box-shadow: none; }
+
+/* 每四行换一套圆角与阴影方向 —— 见 base.css 的 --r-p1..4 说明。
+   用 nth-child(4n+k) 而非随机数：随机每次重渲染都会变，滚动时会「抖」；
+   固定循环既能打破整齐感，又保证同一个学生在两次滚动中长相一致。 */
+.row:nth-child(4n+1) { border-radius: var(--r-p1); box-shadow: var(--mk-p1); }
+.row:nth-child(4n+2) { border-radius: var(--r-p2); box-shadow: var(--mk-p2); }
+.row:nth-child(4n+3) { border-radius: var(--r-p3); box-shadow: var(--mk-p3); }
+.row:nth-child(4n+4) { border-radius: var(--r-p4); box-shadow: var(--mk-p4); }
+
+/* 缺席：红 */
+.row-absent {
+  border-color: var(--red-edge);
+  background: var(--red-bg);
+}
+/* 算出席：琥珀 —— 官方计出席的请假（如 A 类居家学习） */
+.row-excused {
+  border-color: var(--amber-edge);
+  background: var(--amber-bg);
+}
+
+.row-idx {
+  flex-shrink: 0;
+  width: 28px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-dim);
+  text-align: center;
+}
+
+/* 批量选择：复选框 + 选中态
+   注：复选框本体 30px，但真正的点击目标是整行（min-height 62px），
+   因此不构成 P0-4 的「触控目标过小」问题。 */
+.row-check {
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 17px;
+  font-weight: 800;
+  color: transparent;
+  background: #fff;
+  border: 2.4px solid var(--line);
+  border-radius: 9px;
+}
+.row-check-on {
+  background: var(--blue-fill);
+  border-color: var(--blue-edge);
+  color: var(--blue-ink);
+}
+.row-picked {
+  border-color: var(--blue-edge);
+  background: #f2f7fd;
+}
+
+.row-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.row-name {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--ink);
+  /* 马来文姓名普遍较长（NUR AISYAH BALQIS BINTI AHMAD…），允许折到 2 行而非直接截断 */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  line-height: 1.2;
+}
+/* ★ 语义修正：行事由颜色跟随状态，不再恒为红
+   旧实现所有行副标题都是红色（缺席语义），「算出席」行会被误读成出事
+   ★ 允许折 2 行：官方假因原文较长（MAKLUMAN IBU BAPA PENJAGA 25 字符、
+   MENJAGA/MENGURUSKAN AHLI KELUARGA 32 字符），单行省略会把
+   「MENJAGA…」与「MENJAGA AHLI KELUARGA YANG SAKIT」截成同一个，
+   教师无法区分。行高按需增长，无假因的出席行仍保持紧凑。 */
+.row-reason {
+  font-size: 12.5px;
+  color: var(--ink-soft);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  line-height: 1.25;
+}
+.row-absent  .row-reason { color: var(--red); }
+.row-excused .row-reason { color: var(--amber); }
+
+/* 状态标签。
+   「算出席」行显示官方**分类名**（A → PDPR、G → PENGGILIRAN PEPERIKSAAN …），
+   最长的 PENGGILIRAN PEPERIKSAAN 会撑破行宽，故限宽 + 省略号，
+   完整信息仍在上一行的假因原文里（PEMBELAJARAN DI RUMAH 等）。 */
+.row-state {
+  flex-shrink: 0;
+  max-width: 42%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: var(--r-pill);
+  border: 2px solid;
+  white-space: nowrap;
+}
+.state-present { background: var(--green-bg); border-color: var(--green-edge); color: var(--green); }
+.state-absent  { background: #fff; border-color: var(--red-edge); color: var(--red); }
+.state-excused { background: #fff; border-color: var(--amber-edge); color: var(--amber); }
+
+/* ==================== 批量选择条 ==================== */
+/* 批量选择条。
+   马来文按钮名较长（Pilih Semua / Songsang / Kosongkan），
+   若与计数挤在同一行，计数会被压成两行且底部裁切，
+   故让计数独占一行、按钮另起一行（flex-wrap）。 */
+.selbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: var(--blue-fill);
+  border-bottom: 2.2px solid var(--blue-edge);
+}
+.selbar-count {
+  flex: 1 0 100%;
+  font-size: 13.5px;
+  font-weight: 700;
+  white-space: nowrap;
+  color: var(--blue-ink);
+}
+.selbar-count b { font-size: 16px; color: var(--blue-ink); }
+/* P0-4：由 38px 提到 44px */
+.selbar-btn {
+  flex: 1;
+  min-height: var(--tap-min);
+  padding: 0 8px;
+  font-size: 13.5px;
+  font-weight: 700;
+  font-family: inherit;
+  white-space: nowrap;
+  color: var(--blue-ink);
+  background: #fff;
+  border: 2.2px solid var(--blue-edge);
+  border-radius: var(--r-pill);
+  cursor: pointer;
+}
+.selbar-btn:active { background: var(--blue-fill); }
+
+/* ==================== 吸底操作 ==================== */
+.actionbar {
+  display: flex;
+  gap: 10px;
+  padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+  background: var(--paper);
+  border-top: 2.5px solid var(--ink);
+}
+/* 吸底按钮在批量模式下有三个（Batal / Tanda Hadir / Tanda Tidak Hadir）。
+   马来文动作名最长 17 字符，16px 会挤成 3 行并撑破 48px 高度，
+   故降到 14px + 收紧内边距，最多折 2 行仍不溢出。 */
+.actionbar .btn { font-size: 14px; padding: 0 10px; line-height: 1.25; }
+.actionbar .btn-ghost { flex: 0 0 auto; font-size: 13.5px; }
+
+/* ==================== 提示条 ==================== */
+.alert {
+  margin: 10px 12px 0;
+  padding: 11px 14px;
+  border: 2.2px solid;
+  border-radius: var(--r-sk-sm);
+  font-size: 14px;
+  font-weight: 600;
+}
+.alert-red   { background: var(--red-bg);   border-color: var(--red-edge);   color: var(--red); }
+.alert-green { background: var(--green-bg); border-color: var(--green-edge); color: var(--green); }
+.alert-amber { background: var(--amber-bg); border-color: var(--amber-edge); color: var(--amber); }
+.alert-blue  { background: var(--blue-fill); border-color: var(--blue-edge); color: var(--blue-ink); }

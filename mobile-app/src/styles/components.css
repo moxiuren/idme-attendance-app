@@ -1,0 +1,355 @@
+/* 通用组件：按钮 / 顶栏 / 日期栏 / 统计卡片 */
+
+/* ==================== 按钮 ==================== */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: var(--tap);
+  padding: 0 18px;
+  font-size: 16px;
+  font-weight: 600;
+  font-family: inherit;
+  color: var(--text);
+  background: var(--surface);
+  border: 2.2px solid var(--line);
+  border-radius: var(--r-sk-sm);
+  box-shadow: var(--mk-sm);
+  cursor: pointer;
+  transition: transform .06s ease, filter .15s ease;
+}
+.btn:active:not(:disabled) { transform: translate(1px, 1px) scale(.985); box-shadow: none; }
+.btn:disabled { opacity: .45; cursor: not-allowed; box-shadow: none; }
+
+/* 主操作：荧光笔蓝 */
+.btn-primary {
+  background: var(--blue-fill);
+  border-color: var(--blue-edge);
+  color: var(--blue-ink);
+}
+.btn-primary:active:not(:disabled) { background: #bdd5f2; }
+
+/* 提交归档：便签黄 —— 周围都是白纸，黄色自然成为视觉焦点 */
+.btn-amber {
+  background: var(--sticky);
+  border-color: var(--sticky-edge);
+  color: var(--sticky-ink);
+}
+.btn-amber:active:not(:disabled) { background: #fbe489; }
+
+.btn-ghost {
+  background: transparent;
+  border-color: var(--line);
+  color: var(--text-dim);
+  box-shadow: none;
+}
+
+/* 破坏性操作（确认对话框里）：红底红字，与主操作的蓝/琥珀明确区分 */
+.btn-danger {
+  background: var(--red-bg);
+  border-color: var(--red-edge);
+  color: var(--red);
+}
+.btn-danger:active:not(:disabled) { background: #f6d5d2; }
+
+/* 一键全班 PDPR —— 与「算出席」同一语义色（琥珀）。
+   用白底 + 琥珀描边而非实心：提交按钮在有待办时也是琥珀系（便签黄），
+   两个实心块并排会互相抢焦点。 */
+.btn-pdpr {
+  background: #fff;
+  border-color: var(--amber-edge);
+  color: var(--amber);
+  box-shadow: var(--mk-sm);
+}
+.btn-pdpr:active:not(:disabled) { background: var(--amber-bg); box-shadow: none; }
+
+/* 大按钮：15.5px 而非 17px —— 马来文提交文案在 17px 下会挤成 4 行 */
+.btn-lg { min-height: 60px; font-size: 15.5px; line-height: 1.3; }
+
+/* 提交按钮两段式：主行 = 官方动词（Kemaskini），副行 = 明细。
+   明细最长到「0 tidak hadir · 31 PDPR/cuti」，与动词同行会折成 3 行撑破按钮，
+   拆成两行后行数固定、信息不丢。 */
+.btn-2line {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  line-height: 1.2;
+}
+.btn-2line-a { font-size: 15.5px; font-weight: 700; }
+.btn-2line-b { font-size: 12px; font-weight: 600; opacity: .85; }
+
+.btn-block { width: 100%; }
+.flex1 { flex: 1; }
+
+/* 顶栏图标按钮 —— P0-4：由 40px 提到 44px，宽度也锁 44px 保证触控面积 */
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--tap-min);
+  min-height: var(--tap-min);
+  padding: 0 6px;
+  color: var(--blue-ink);
+  background: transparent;
+  border: 2px solid transparent;
+  border-radius: var(--r-pill);
+  font-family: inherit;
+  cursor: pointer;
+}
+.icon-btn:disabled { opacity: .4; }
+.icon-btn:active:not(:disabled) { background: var(--blue-fill); }
+.icon-btn-on {
+  background: var(--blue-fill);
+  border-color: var(--blue-edge);
+}
+
+/* 更新提示角标：设置按钮右上角的琥珀圆点。
+   不新增按钮 —— 360dp 顶栏只剩约 36px 余量，再塞 44px 触控目标会挤掉班级名。
+   圆点 9px + 2px 纸色描边：描边让它压在图标上时仍能看出是「贴在角上」而非融进线条。 */
+.icon-btn-badge { position: relative; }
+.upd-dot {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--amber-edge);
+  box-shadow: 0 0 0 2px var(--paper);
+  /* 纯装饰：信息已由按钮的 title / 无障碍名称之外的下钻路径承担，
+     读屏不必单独念一个「有新版本」的孤立圆点 */
+  pointer-events: none;
+}
+
+/* ==================== 主框架 ==================== */
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding-top: env(safe-area-inset-top);
+  /* 纸张颗粒：只在最外层画一次，内部滚动不重复绘制。
+     旧版三层透明度 .09 / .07 / .06 **精确递减** —— 这个递减本身
+     就是「配出来的」痕迹，真实纸纤维不会按等差数列分布。
+     改为 .11 / .055 / .08：深浅交替、互不成比例。
+     尺寸也避开 37/41 这类相邻质数（看着太讲究），改用 43×37、59×53、31×47。 */
+  background-color: var(--paper);
+  background-image:
+    radial-gradient(circle at 18% 22%, rgba(160, 145, 115, .11) 0 1px, transparent 1px),
+    radial-gradient(circle at 62% 71%, rgba(160, 145, 115, .055) 0 1px, transparent 1px),
+    radial-gradient(circle at 84% 38%, rgba(160, 145, 115, .08) 0 1px, transparent 1px);
+  background-size: 43px 37px, 59px 53px, 31px 47px;
+}
+
+/* 顶栏：像笔记本页眉，下方一条手绘横线 */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 12px;
+  background: transparent;
+  border-bottom: 2.5px solid var(--ink);
+}
+.topbar-class {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: var(--tap-min);
+  padding: 0 12px;
+  /* 17px：360dp 屏上「TAHUN SATU B」正好放得下，18px 会被截断（真机实测） */
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--blue-ink);
+  background: var(--blue-fill);
+  border: 2.2px solid var(--blue-edge);
+  border-radius: var(--r-sk-sm);
+  box-shadow: var(--mk-blue);
+  font-family: inherit;
+  cursor: pointer;
+  max-width: 42vw;
+}
+.topbar-class:disabled { box-shadow: none; }
+.topbar-class-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.caret { font-size: 12px; opacity: .7; }
+/* 右侧动作组不参与压缩，保证三个按钮始终单行 */
+.topbar-right { display: flex; align-items: center; gap: 2px; flex-shrink: 0; }
+.conn {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  margin-right: 6px;
+  flex-shrink: 0;
+}
+.conn-on  { background: var(--green); box-shadow: 0 0 0 3px rgba(63, 107, 44, .18); }
+.conn-off { background: #a99f8c; }
+
+/* 日期栏
+   注：官方状态徽章原文较长（MENUNGGU PENGESAHAN 19 字符），
+   360dp 屏上必须收紧字号与箭头宽度才放得下。箭头 46px 仍 ≥ 44px 触控下限。 */
+.datebar {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+  padding: 10px 12px;
+  background: transparent;
+}
+.date-arrow {
+  width: 46px;
+  min-height: 50px;
+  font-size: 24px;
+  color: var(--blue-ink);
+  background: var(--blue-fill);
+  border: 2.2px solid var(--blue-edge);
+  border-radius: var(--r-sk-sm);
+  box-shadow: var(--mk-blue);
+  font-family: inherit;
+  cursor: pointer;
+}
+.date-arrow:active:not(:disabled) { transform: translate(1px, 1px); box-shadow: none; }
+.date-arrow:disabled { opacity: .4; box-shadow: none; }
+.date-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  min-height: 50px;
+  background: var(--surface);
+  border: 2.2px solid var(--line);
+  border-radius: var(--r-sk-sm);
+  box-shadow: var(--mk-sm);
+  font-family: inherit;
+  cursor: pointer;
+}
+.date-text { font-size: 15px; font-weight: 700; color: var(--ink); white-space: nowrap; }
+.date-tag {
+  font-size: 10px;
+  font-weight: 700;
+  /* 去掉 letter-spacing: -0.1px —— 10px 字号下负字距几乎不可见，
+     纯粹是「显得专业」的装饰。徽章本来就要挤进窄格，负字距也不会让它更省地方。 */
+  padding: 1.5px 8px;
+  border-radius: var(--r-pill);
+  border: 1.5px solid;
+  white-space: nowrap;
+}
+.tag-green { background: var(--green-bg); border-color: var(--green-edge); color: var(--green); }
+.tag-amber { background: var(--amber-bg); border-color: var(--amber-edge); color: var(--amber); }
+
+/* 统计：四格，手绘分隔。马来文标签（Tidak Hadir）比中文长，故收紧间距与字号 */
+.stats {
+  display: grid;
+  /* minmax(0,1fr) 而非 1fr：1fr 的最小宽度等于内容最小宽度，
+     「96.8%」这类不可折行内容会把四列撑宽、把整块布局顶出屏幕。
+     minmax(0,…) 允许列缩到 0，溢出改由 .stat 的容器查询字号 + 折行兜底控制。 */
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+  padding: 0 10px;
+}
+.stat {
+  min-width: 0;
+  /* 卡片自身作为容器查询容器：字号按卡片真实宽度自适应。
+     360dp 下卡片内容宽只有 64~68px，而「100%」在 24px 时需要约 71px、
+     20px 时需要约 59px —— 固定字号在宽屏上仍会冲出卡片
+     （真机实测：固定 24px 时百分比溢出卡片并顶到屏幕边缘被截断）。
+     注：百分比满 100 已改为不带小数（见 utils.formatPercent），
+     最宽的取值是「96.8%」这类 5 字符。 */
+  container-type: inline-size;
+  background: var(--surface);
+  border: 2.2px solid var(--line);
+  border-radius: var(--r-sk-sm);
+  box-shadow: var(--mk-sm);
+  padding: 9px 3px;
+  text-align: center;
+  /* 数字与标签作为**一组**在卡片内垂直居中。
+     原先靠 padding 上下各 9px + margin-top 硬凑：数字 line-height 1.1 的
+     字形上下留白本就不对称，凑出来的重心会偏，小屏上肉眼可见「没居中」。
+     flex 居中后，字号怎么变，整组的垂直重心都钉在卡片中线上。 */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+/* 四格统计：只换**厚度方向**，不换圆角。
+   为什么这里不套 --r-p1..4 的圆角循环：统计条是横向比对数字的地方，
+   四格的边框与基线必须齐平，否则教师扫「31 / 28 / 2 / 90.3%」时
+   视线会被参差的边角拽走。可读性优先于「不规则感」。
+   而厚度方向各朝一边，就足够说明「这是四张纸，不是一张表格的四格」——
+   差异只在阴影的 x/y 偏移与透明度上，不触及数字本身。 */
+.stat:nth-child(4n+1) { box-shadow: var(--mk-p1); }
+.stat:nth-child(4n+2) { box-shadow: var(--mk-p2); }
+.stat:nth-child(4n+3) { box-shadow: var(--mk-p3); }
+.stat:nth-child(4n+4) { box-shadow: var(--mk-p4); }
+/* 兜底 18px：容器查询不可用的老 WebView 下也能容纳 5 字符的百分比（如「96.8%」） */
+.stat-num {
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 1.1;
+  color: var(--ink);
+  /* 数字理论上不可折行，但仍留一条兜底，宁可折行也不出格 */
+  overflow-wrap: anywhere;
+}
+@supports (container-type: inline-size) {
+  /* 27cqw：主界面卡片内容宽 ≈67.6px → 18.3px；报表抽屉 ≈64.5px → 17.4px。
+     两者都留约 4% 余量容纳「100%」（满值已不带小数，见 utils.formatPercent）；
+     宽屏时上限仍为设计值 24px。 */
+  .stat-num { font-size: clamp(14px, 27cqw, 24px); }
+}
+.stat-lbl {
+  /* 12.5px 起步而非 10.5px：马来文标签（Tidak Hadir / Peratus）在 360dp 下
+     原先只有数字的一半高，缩成一撮小字，扫视时几乎读不出来。
+     上限 14px 避免宽屏时标签追平数字、喧宾夺主。 */
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-dim);
+  /* 间距交给 flex 的 gap，不再用 margin —— 见 .stat 的说明 */
+  margin-top: 3px;
+  /* 允许折 2 行，并对超长单词强制断行：
+     马来语单词（如 Kedatangan）单字就可能超过卡片内容宽，
+     只靠空格折行仍会横向溢出。 */
+  white-space: normal;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+  /* 折行后各行宽度不等时，靠 text-align 保持每行居中 */
+  text-align: center;
+  max-width: 100%;
+}
+@supports (container-type: inline-size) {
+  /* 标签跟着卡片宽度缩放：与 .stat-num 的 27cqw 同步，
+     否则窄屏上数字缩了、标签不动，比例会越来越失衡。
+     19cqw 在 360dp 下约 13.3px —— 数字 19px 与标签 13.3px 的比例约 1.4:1，
+     既能让教师扫视时读清「Tidak Hadir」，又不至于追平数字。
+     马来文两词标签在这个字号下会折成两行，这是有意的：
+     折行后每行更短、更好认，配合 .stat 的 flex 居中不会歪。 */
+  .stat-lbl { font-size: clamp(12px, 19cqw, 15px); }
+}
+/* 「算出席」说明：官方计出席的请假（不扣出席率） */
+.stat-note {
+  margin: 8px 10px 0;
+  padding: 7px 11px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--amber);
+  background: var(--amber-bg);
+  border: 2px solid var(--amber-edge);
+  border-radius: var(--r-sk-sm);
+}
+.stats-report {
+  margin: 14px 0;
+  padding: 0;
+  border: none;
+  gap: 7px;
+}
+/* 抽屉内的折行与字号已由上面的 .stat-lbl / .stat-num 统一处理
+   （container-type + cqw 自适应），此处不再需要单独覆盖。 */
+
+.c-green { color: var(--green); }
+.c-red   { color: var(--red); }
+.c-blue  { color: var(--blue-ink); }
+.c-dim   { color: var(--text-dim); }

@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>idMe 点名 · 手账风格改版演示</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Kalam:wght@400;700&family=ZCOOL+KuaiLe&family=Gaegu:wght@400;700&display=swap" rel="stylesheet">
+<style>
+/* ══════════════════════════════════════════════════════════
+   手账风格设计令牌
+   ══════════════════════════════════════════════════════════ */
+:root{
+  /* 纸与墨 */
+  --paper:      #FCF8EC;
+  --paper-2:    #F6F0E0;
+  --paper-edge: #EDE5D2;
+  --ink:        #2E2A24;   /* 纸底 13.9:1 */
+  --ink-soft:   #6B6255;   /* 纸底  5.6:1 */
+  --muted:      #665D4E;   /* 页底  5.0:1 · 页面外壳次要文字专用 */
+
+  /* 荧光蓝 —— 界面外壳 */
+  --blue-fill:  #CFE1F7;
+  --blue-edge:  #9CC0E8;
+  --blue-ink:   #2B4E78;   /* 蓝底 6.4:1 */
+
+  /* 琥珀 —— 算出席 */
+  --amber:      #D98E1F;
+  --amber-fill: #FDF0D8;
+  --amber-ink:  #9E5A00;   /* 琥珀底 4.8:1 */
+
+  /* 红 —— 真缺席 */
+  --red:        #D24B4B;
+  --red-fill:   #FBE4E2;
+  --red-ink:    #B03434;   /* 纸底 5.8:1 */
+
+  /* 绿 —— 已归档 / 在线 */
+  --green-fill: #E4F0DA;
+  --green-ink:  #3F6B2C;   /* 绿底 5.3:1 */
+
+  /* 便签 */
+  --sticky:     #FFF0A8;
+  --sticky-edge:#E3C95E;
+
+  --f-hand:  'Patrick Hand','Gaegu','ZCOOL KuaiLe','Segoe Print','Comic Sans MS',cursive;
+  --f-mark:  'Kalam','Patrick Hand','ZCOOL KuaiLe','Segoe Print','Comic Sans MS',cursive;
+}
+/* 清晰模式：只换数据区字体，手绘外壳保留 */
+.readable{
+  --f-hand:'Inter','Segoe UI',system-ui,'Noto Sans SC','Microsoft YaHei',sans-serif;
+  --f-mark:'Inter','Segoe UI',system-ui,'Noto Sans SC','Microsoft YaHei',sans-serif;
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+
+body{
+  background:
+    radial-gradient(ellipse at 20% 0%, #F2EDE2 0%, transparent 55%),
+    radial-gradient(ellipse at 85% 100%, #EFE8DA 0%, transparent 50%),
+    #E9E2D4;
+  color:#3A342B;
+  font-family:'Patrick Hand','Segoe Print','Microsoft YaHei',cursive;
+  font-size:16px;line-height:1.5;
+  padding:44px 24px 90px;
+  -webkit-font-smoothing:antialiased;
+}
+
+.wrap{max-width:1240px;margin:0 auto}
+
+/* ── 页头 ── */
+.head{text-align:center;margin-bottom:40px}
+.head .tape{
+  display:inline-block;background:var(--sticky);border:1.5px solid var(--sticky-edge);
+  padding:5px 16px;border-radius:4px;font-size:13px;font-weight:700;letter-spacing:1px;
+  color:#7A6516;transform:rotate(-1.4deg);margin-bottom:20px;
+  box-shadow:1px 2px 0 rgba(0,0,0,.08);
+}
+.head h1{font-family:var(--f-mark);font-size:42px;font-weight:700;letter-spacing:-.5px;
+  color:#2E2A24;margin-bottom:10px;transform:rotate(-.5deg)}
+.head p{font-size:16px;color:var(--muted);max-width:660px;margin:0 auto;line-height:1.6}
+
+/* ── 字体开关 ── */
+.toggle-bar{display:flex;justify-content:center;margin:26px 0 40px}
+.tgl{
+  display:inline-flex;background:#FCF8EC;border:2.5px solid var(--ink);
+  border-radius:255px 14px 225px 14px/14px 225px 14px 255px;
+  padding:4px;gap:2px;box-shadow:2.5px 3px 0 rgba(46,42,36,.16);
+}
+.tgl button{
+  border:none;background:transparent;font-family:var(--f-mark);font-size:14.5px;font-weight:700;
+  padding:9px 20px;border-radius:200px 10px 190px 10px/10px 190px 10px 200px;
+  color:var(--muted);cursor:pointer;transition:all .18s;
+}
+.tgl button.on{background:var(--blue-fill);color:var(--blue-ink);
+  box-shadow:inset 0 0 0 2px var(--blue-edge)}
+
+/* ══════════════════════════════════════════════════════════
+   笔记本页
+   ══════════════════════════════════════════════════════════ */
+.notebook{
+  position:relative;width:404px;flex-shrink:0;
+  background:var(--paper);
+  border-radius:6px 18px 18px 6px;
+  padding:26px 20px 22px 30px;
+  box-shadow:
+    0 1px 0 #E5DCC7, 0 22px 40px -12px rgba(60,50,32,.34),
+    0 0 0 1px rgba(120,105,80,.14);
+}
+/* 纸张颗粒 */
+.notebook::after{
+  content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+  background-image:
+    radial-gradient(circle at 18% 22%, rgba(160,145,115,.09) 0 1px, transparent 1px),
+    radial-gradient(circle at 62% 71%, rgba(160,145,115,.07) 0 1px, transparent 1px),
+    radial-gradient(circle at 84% 38%, rgba(160,145,115,.06) 0 1px, transparent 1px);
+  background-size:37px 41px, 53px 47px, 29px 33px;
+  mix-blend-mode:multiply;
+}
+/* 装订线圈 */
+.spiral{
+  position:absolute;left:-15px;top:30px;bottom:30px;width:30px;
+  display:flex;flex-direction:column;justify-content:space-between;z-index:4;
+}
+.spiral i{
+  display:block;width:30px;height:13px;border-radius:8px;
+  background:linear-gradient(180deg,#E2DCD0 0%,#B3AB9B 40%,#7F7869 100%);
+  box-shadow:0 1.5px 2.5px rgba(50,40,25,.3), inset 0 1px 0 rgba(255,255,255,.55);
+  position:relative;
+}
+.spiral i::after{
+  content:'';position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  width:7px;height:7px;border-radius:50%;background:#6E6759;
+  box-shadow:inset 0 1px 1.5px rgba(0,0,0,.45);
+}
+/* 纸孔 */
+.holes{position:absolute;left:11px;top:30px;bottom:30px;width:10px;
+  display:flex;flex-direction:column;justify-content:space-between;z-index:1}
+.holes i{display:block;width:9px;height:9px;border-radius:50%;
+  background:#DED5BF;box-shadow:inset 0 1.5px 2px rgba(110,95,70,.4)}
+
+/* ══════════════════════════════════════════════════════════
+   手绘盒子
+   ══════════════════════════════════════════════════════════ */
+.sk{
+  border:2.5px solid var(--ink);
+  border-radius:255px 14px 225px 14px/14px 225px 14px 255px;
+  background:#fff;
+}
+.sk-sm{border-radius:190px 11px 170px 11px/11px 170px 11px 190px;border-width:2.2px}
+.sk-blue{
+  background:var(--blue-fill);border-color:var(--blue-edge);
+  box-shadow:2.5px 3px 0 rgba(43,78,120,.14);
+}
+.sk-amber{background:var(--amber-fill);border-color:var(--amber);
+  box-shadow:2.5px 3px 0 rgba(158,90,0,.13)}
+.sk-green{background:var(--green-fill);border-color:#8FB878}
+.sk-plain{background:transparent;border-color:#B9B0A0}
+
+/* ══════════════════════════════════════════════════════════
+   顶栏
+   ══════════════════════════════════════════════════════════ */
+.tb{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:16px}
+.tb-class{
+  display:flex;align-items:center;gap:6px;
+  padding:7px 14px;font-family:var(--f-mark);font-size:19px;font-weight:700;
+  color:var(--blue-ink);letter-spacing:.3px;
+}
+.tb-class .cv{font-size:12px;opacity:.65}
+.tb-right{display:flex;align-items:center;gap:9px}
+.dot{width:9px;height:9px;border-radius:50%;background:#7FB069;
+  box-shadow:0 0 0 3.5px rgba(127,176,105,.26), 0 1px 2px rgba(0,0,0,.2)}
+.tb-act{font-family:var(--f-mark);font-size:16px;font-weight:700;color:#4A4438;
+  display:flex;align-items:center;gap:3px}
+.tb-act .gear{font-size:14px;opacity:.7}
+
+/* ══════════════════════════════════════════════════════════
+   日期栏
+   ══════════════════════════════════════════════════════════ */
+.db{display:flex;align-items:stretch;gap:9px;margin-bottom:16px}
+.darrow{
+  width:44px;display:flex;align-items:center;justify-content:center;
+  font-size:22px;font-weight:700;color:var(--blue-ink);font-family:var(--f-mark);
+}
+.dmain{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:3px;padding:8px 6px;min-height:56px;
+}
+.dtext{font-family:var(--f-mark);font-size:18px;font-weight:700;color:var(--ink);
+  letter-spacing:.2px;font-variant-numeric:tabular-nums}
+.dtag{
+  font-family:var(--f-mark);font-size:12.5px;font-weight:700;color:var(--green-ink);
+  background:var(--green-fill);border:1.8px solid #8FB878;border-radius:200px;
+  padding:1.5px 12px;
+}
+
+/* ══════════════════════════════════════════════════════════
+   统计
+   ══════════════════════════════════════════════════════════ */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-bottom:13px}
+.st{text-align:center;padding:7px 2px}
+.st .n{font-family:var(--f-mark);font-size:26px;font-weight:700;line-height:1.05;
+  color:var(--ink);font-variant-numeric:tabular-nums}
+.st .l{font-size:12.5px;color:var(--ink-soft);margin-top:2px;font-weight:400}
+.st.g .n{color:var(--green-ink)}
+.st.b .n{color:var(--blue-ink)}
+
+/* 说明条 */
+.note{
+  display:flex;align-items:center;gap:8px;padding:9px 13px;margin-bottom:16px;
+  font-size:13.5px;color:var(--amber-ink);font-weight:400;
+}
+.note .star{font-size:15px;line-height:1;flex-shrink:0}
+
+/* ══════════════════════════════════════════════════════════
+   学生行
+   ══════════════════════════════════════════════════════════ */
+.row{
+  display:flex;align-items:center;gap:11px;padding:9px 12px 9px 9px;margin-bottom:9px;
+  background:#fff;border:2.2px solid #C6BDA9;
+  border-radius:200px 12px 180px 12px/12px 180px 12px 200px;
+  position:relative;
+}
+.row.excused{background:#FFFDF6;border-color:#E8CFA0}
+.row.absent{background:#FEF6F5;border-color:#E5B3B0}
+.row .idx{
+  width:31px;height:31px;flex-shrink:0;display:flex;align-items:center;justify-content:center;
+  font-family:var(--f-mark);font-size:16px;font-weight:700;color:var(--blue-ink);
+  background:var(--blue-fill);border:2.2px solid var(--blue-edge);
+  border-radius:110px 8px 100px 8px/8px 100px 8px 110px;
+}
+.row .body{flex:1;min-width:0}
+.row .nm{
+  font-family:var(--f-mark);font-size:17.5px;font-weight:700;color:var(--ink);
+  letter-spacing:.15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  line-height:1.22;
+}
+.row .rs{
+  font-size:13px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  line-height:1.25;
+}
+/* ★ 语义修正：算出席用琥珀，只有真缺席才用红 */
+.row.excused .rs{color:var(--amber-ink)}
+.row.absent  .rs{color:var(--red-ink)}
+.pill{
+  flex-shrink:0;font-family:var(--f-mark);font-size:14.5px;font-weight:700;
+  padding:5px 14px;border-radius:200px 10px 190px 10px/10px 190px 10px 200px;
+  border:2.4px solid;
+}
+.pill.excused{color:var(--amber-ink);border-color:var(--amber);background:#FFFCF4}
+.pill.absent{color:var(--red-ink);border-color:var(--red);background:#FFF8F7}
+.pill.present{color:var(--green-ink);border-color:#8FB878;background:var(--green-fill)}
+
+/* 批量勾选 */
+.cbx{
+  width:27px;height:27px;flex-shrink:0;display:flex;align-items:center;justify-content:center;
+  font-size:16px;font-weight:700;color:transparent;
+  background:#fff;border:2.4px solid #C6BDA9;
+  border-radius:110px 8px 100px 8px/8px 100px 8px 110px;
+}
+.cbx.on{background:var(--blue-fill);border-color:var(--blue-edge);color:var(--blue-ink)}
+.row.picked{background:#F2F7FD;border-color:var(--blue-edge)}
+
+/* ══════════════════════════════════════════════════════════
+   吸底
+   ══════════════════════════════════════════════════════════ */
+.foot{display:flex;align-items:center;gap:10px;margin-top:18px;position:relative}
+.btn{
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--f-mark);font-weight:700;padding:13px 18px;text-align:center;
+  border:2.5px solid var(--ink);
+  border-radius:230px 13px 210px 13px/13px 210px 13px 230px;
+  box-shadow:2.5px 3px 0 rgba(46,42,36,.16);
+}
+.btn.ghost{background:var(--blue-fill);border-color:var(--blue-edge);color:var(--blue-ink);
+  font-size:16px;flex:0 0 auto}
+.sticky{
+  flex:1;background:var(--sticky);border:2.5px solid var(--sticky-edge);
+  border-radius:6px 14px 6px 14px;padding:11px 14px;
+  font-family:var(--f-mark);font-weight:700;font-size:15.5px;color:#6B5711;
+  line-height:1.32;text-align:center;
+  transform:rotate(-1.1deg);
+  box-shadow:3px 4px 0 rgba(120,100,30,.16);
+}
+.sticky .big{font-size:16.5px;display:block}
+
+/* ══════════════════════════════════════════════════════════
+   抽屉
+   ══════════════════════════════════════════════════════════ */
+.sheet-wrap{
+  position:absolute;inset:0;border-radius:inherit;overflow:hidden;z-index:9;
+  display:flex;align-items:flex-end;
+  background:rgba(60,50,32,.28);
+}
+.sheet{
+  width:100%;background:var(--paper);
+  border-radius:26px 26px 0 0;border-top:2.8px solid var(--ink);
+  padding:12px 16px 18px;position:relative;
+  box-shadow:0 -10px 26px rgba(60,50,32,.24);
+}
+.grab{width:44px;height:5px;border-radius:3px;background:#C6BDA9;margin:0 auto 13px}
+.sh-t{font-family:var(--f-mark);font-size:20px;font-weight:700;color:var(--ink);
+  margin-bottom:3px;letter-spacing:.2px}
+.sh-s{font-size:13px;color:var(--ink-soft);margin-bottom:13px;line-height:1.4}
+.chips{display:flex;gap:7px;overflow:hidden;margin-bottom:12px}
+.chip{
+  flex-shrink:0;font-family:var(--f-mark);font-size:13.5px;font-weight:700;
+  padding:5px 13px;border-radius:200px;border:2.2px solid #C6BDA9;color:#5D5648;
+  background:#fff;
+}
+.chip.on{background:var(--blue-fill);border-color:var(--blue-edge);color:var(--blue-ink)}
+.rlist{display:flex;flex-direction:column;gap:8px}
+.ritem{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:11px 13px;background:#fff;border:2.2px solid #C6BDA9;
+  border-radius:180px 11px 170px 11px/11px 170px 11px 180px;
+}
+.ritem.on{background:var(--amber-fill);border-color:var(--amber)}
+.ritem .rn{font-family:var(--f-mark);font-size:15px;font-weight:700;color:var(--ink);
+  line-height:1.25}
+.ritem .rc{font-size:12px;color:var(--ink-soft);flex-shrink:0;font-variant-numeric:tabular-nums}
+
+/* ══════════════════════════════════════════════════════════
+   涂鸦
+   ══════════════════════════════════════════════════════════ */
+.doodle{position:absolute;pointer-events:none;opacity:.85}
+.d-star{right:16px;bottom:14px;font-size:20px;color:#D9B84A;transform:rotate(12deg)}
+.d-cat{left:14px;bottom:12px;width:34px;opacity:.8}
+.d-hearts{right:22px;top:10px;font-size:14px;color:#E79BB4;transform:rotate(-8deg)}
+.d-spark{font-size:15px;color:#D9B84A}
+
+/* ══════════════════════════════════════════════════════════
+   布局
+   ══════════════════════════════════════════════════════════ */
+.hero{display:flex;justify-content:center;margin-bottom:64px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(404px,1fr));
+  gap:52px 40px;justify-items:center;margin-bottom:20px}
+.cap{text-align:center;margin-top:18px;max-width:404px}
+.cap .t{font-family:var(--f-mark);font-size:17px;font-weight:700;color:#3A342B}
+.cap .d{font-size:14px;color:var(--muted);margin-top:4px;line-height:1.5}
+.item{display:flex;flex-direction:column;align-items:center}
+
+/* ── 说明卡 ── */
+.sec-h{
+  font-family:var(--f-mark);font-size:24px;font-weight:700;color:#2E2A24;
+  margin:64px 0 8px;display:flex;align-items:center;gap:12px;
+}
+.sec-h .sq{width:22px;height:22px;background:var(--blue-fill);
+  border:2.4px solid var(--blue-edge);border-radius:90px 6px 80px 6px/6px 80px 6px 90px;
+  transform:rotate(-6deg);flex-shrink:0}
+.sec-p{font-size:15px;color:var(--muted);margin-bottom:24px;max-width:780px;line-height:1.6}
+
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(288px,1fr));gap:20px}
+.card{
+  background:var(--paper);border:2.5px solid var(--ink);
+  border-radius:230px 14px 210px 14px/14px 210px 14px 230px;
+  padding:20px 20px 22px;box-shadow:3px 4px 0 rgba(46,42,36,.13);
+  position:relative;
+}
+.card h4{font-family:var(--f-mark);font-size:17px;font-weight:700;color:var(--ink);
+  margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.card h4 .num{
+  width:24px;height:24px;flex-shrink:0;display:flex;align-items:center;justify-content:center;
+  font-size:14px;background:var(--amber-fill);border:2.2px solid var(--amber);
+  color:var(--amber-ink);border-radius:80px 6px 70px 6px/6px 70px 6px 80px;
+}
+.card ul{list-style:none;display:flex;flex-direction:column;gap:9px}
+.card li{font-size:14px;color:#5D5648;line-height:1.55;padding-left:17px;position:relative}
+.card li::before{content:'✎';position:absolute;left:0;top:0;font-size:11px;color:#A89A7E}
+.card li b{color:#2E2A24;font-weight:700}
+
+/* 色板 */
+.sw-grid{display:flex;flex-wrap:wrap;gap:12px}
+.swc{
+  background:var(--paper);border:2.2px solid var(--ink);border-radius:180px 11px 170px 11px/11px 170px 11px 180px;
+  padding:10px 14px;display:flex;align-items:center;gap:10px;min-width:172px;
+}
+.swc .chip-c{width:26px;height:26px;border-radius:90px 6px 80px 6px/6px 80px 6px 90px;
+  border:2px solid rgba(46,42,36,.35);flex-shrink:0}
+.swc .tx .n{font-family:var(--f-mark);font-size:13.5px;font-weight:700;color:#2E2A24;
+  font-variant-numeric:tabular-nums}
+.swc .tx .u{font-size:11.5px;color:var(--ink-soft);margin-top:1px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="head">
+    <div class="tape">NOTEBOOK STYLE · v1</div>
+    <h1>idMe 点名 · 手账风格</h1>
+    <p>把整套界面画进一本线圈笔记本 —— 荧光笔蓝做外壳、马克笔手写体做文字、便签做提交按钮。装订线圈、纸张颗粒、涂鸦都在。</p>
+  </div>
+
+  <div class="toggle-bar">
+    <div class="tgl">
+      <button id="btnHand" class="on" onclick="setMode('hand')">✎ 手写体</button>
+      <button id="btnRead" onclick="setMode('read')">▤ 清晰体</button>
+    </div>
+  </div>
+
+  <!-- ══════════════ 主界面 ══════════════ -->
+  <div class="hero">
+    <div class="item">
+      <div class="notebook" id="root">
+        <div class="spiral"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        <div class="holes"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+
+        <div class="doodle d-hearts">♡ ✧</div>
+
+        <!-- 顶栏 -->
+        <div class="tb">
+          <div class="tb-class sk sk-sm sk-blue">TAHUN SATU B<span class="cv">▾</span></div>
+          <div class="tb-right">
+            <span class="dot"></span>
+            <span class="tb-act">批量</span>
+            <span class="tb-act">报表</span>
+            <span class="tb-act">设置<span class="gear">⚙</span></span>
+          </div>
+        </div>
+
+        <!-- 日期 -->
+        <div class="db">
+          <div class="darrow sk sk-sm">‹</div>
+          <div class="dmain sk sk-sm">
+            <span class="dtext">2026-10-16 星期五</span>
+            <span class="dtag">已归档</span>
+          </div>
+          <div class="darrow sk sk-sm">›</div>
+        </div>
+
+        <!-- 统计 -->
+        <div class="stats">
+          <div class="st"><div class="n">31</div><div class="l">在籍</div></div>
+          <div class="st g"><div class="n">31</div><div class="l">出席</div></div>
+          <div class="st"><div class="n">0</div><div class="l">缺席</div></div>
+          <div class="st b"><div class="n">100.00%</div><div class="l">出席率</div></div>
+        </div>
+
+        <div class="note sk sk-sm sk-amber">
+          <span class="star">⭐</span>
+          <span>含 31 人「算出席」（请假 / 居家学习），官方不扣出席率</span>
+        </div>
+
+        <!-- 名单 -->
+        <div class="row excused">
+          <span class="idx">1</span>
+          <span class="body"><span class="nm">AHMAD DANIAL BIN ROSLI</span>
+          <span class="rs">PEMBELAJARAN DI RUMAH</span></span>
+          <span class="pill excused">算出席</span>
+        </div>
+        <div class="row excused">
+          <span class="idx">2</span>
+          <span class="body"><span class="nm">NUR AISYAH BALQIS</span>
+          <span class="rs">PEMBELAJARAN DI RUMAH</span></span>
+          <span class="pill excused">算出席</span>
+        </div>
+        <div class="row excused">
+          <span class="idx">3</span>
+          <span class="body"><span class="nm">TAN WEI MING</span>
+          <span class="rs">PEMBELAJARAN DI RUMAH</span></span>
+          <span class="pill excused">算出席</span>
+        </div>
+        <div class="row excused">
+          <span class="idx">4</span>
+          <span class="body"><span class="nm">SITI KHADIJAH</span>
+          <span class="rs">PEMBELAJARAN DI RUMAH</span></span>
+          <span class="pill excused">算出席</span>
+        </div>
+        <div class="row excused">
+          <span class="idx">5</span>
+          <span class="body"><span class="nm">MURID CONTOH SATU</span>
+          <span class="rs">PEMBELAJARAN DI RUMAH</span></span>
+          <span class="pill excused">算出席</span>
+        </div>
+        <div class="row excused">
+          <span class="idx">6</span>
+          <span class="body"><span class="nm">MURID CONTOH DUA</span>
+          <span class="rs">PEMBELAJARAN DI RUMAH</span></span>
+          <span class="pill excused">算出席</span>
+        </div>
+        <div class="row excused">
+          <span class="idx">7</span>
+          <span class="body"><span class="nm">MUHAMMAD HAFIZ BIN OM…</span>
+          <span class="rs">PEMBELAJARAN DI RUMAH</span></span>
+          <span class="pill excused">算出席</span>
+        </div>
+
+        <!-- 吸底 -->
+        <div class="foot">
+          <div class="btn ghost">全部出席</div>
+          <div class="sticky">
+            <span class="big">确认提交 · 0 人缺席</span>
+            · 31 人算出席
+          </div>
+          <svg class="doodle d-cat" viewBox="0 0 40 34" fill="none" stroke="#B8AE99" stroke-width="2.2" stroke-linecap="round">
+            <path d="M9 14 L7 5 L15 10"/><path d="M31 14 L33 5 L25 10"/>
+            <path d="M8 16 q0 12 12 12 q12 0 12 -12 q0 -6 -12 -6 q-12 0 -12 6z"/>
+            <circle cx="16" cy="16" r="1.4" fill="#B8AE99" stroke="none"/>
+            <circle cx="24" cy="16" r="1.4" fill="#B8AE99" stroke="none"/>
+          </svg>
+        </div>
+      </div>
+      <div class="cap">
+        <div class="t">主界面</div>
+        <div class="d">线圈装订 + 纸张颗粒 + 荧光笔蓝外壳 + 马克笔手写体；提交按钮做成黄色便签</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════ 其他状态 ══════════════ -->
+  <div class="grid">
+
+    <!-- 批量选择 -->
+    <div class="item">
+      <div class="notebook">
+        <div class="spiral"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        <div class="holes"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+
+        <div class="tb">
+          <div class="tb-class sk sk-sm sk-blue">TAHUN SATU B<span class="cv">▾</span></div>
+          <div class="tb-right"><span class="dot"></span>
+            <span class="tb-act">报表</span><span class="tb-act">设置<span class="gear">⚙</span></span></div>
+        </div>
+
+        <div class="note sk sk-sm sk-blue" style="color:var(--blue-ink);justify-content:space-between">
+          <span>已选 <b style="font-family:var(--f-mark);font-size:17px">31</b> / 31</span>
+          <span style="display:flex;gap:6px">
+            <span class="chip" style="padding:3px 11px;font-size:12.5px">全选</span>
+            <span class="chip" style="padding:3px 11px;font-size:12.5px">反选</span>
+            <span class="chip" style="padding:3px 11px;font-size:12.5px">清空</span>
+          </span>
+        </div>
+
+        <div class="row excused picked">
+          <span class="cbx on">✓</span>
+          <span class="body"><span class="nm">AHMAD DANIAL BIN ROSLI</span>
+          <span class="rs">PEMBELAJARAN DI RUMAH</span></span>
+          <span class="pill excused">算出席</span>
+        </div>
+        <div class="row excused picked">
+          <span class="cbx on">✓</span>
+          <span class="body"><span class="nm">NUR AISYAH BALQIS</span>
+          <span class="rs">PEMBELAJARAN DI RUMAH</span></span>
+          <span class="pill excused">算出席</span>
+        </div>
+        <div class="row excused picked">
+          <span class="cbx on">✓</span>
+          <span class="body"><span class="nm">TAN WEI MING</span>
+          <span class="rs">PEMBELAJARAN DI RUMAH</span></span>
+          <span class="pill excused">算出席</span>
+        </div>
+        <div class="row picked">
+          <span class="cbx on">✓</span>
+          <span class="body"><span class="nm">SITI KHADIJAH</span></span>
+          <span class="pill present">出席</span>
+        </div>
+        <div class="row picked">
+          <span class="cbx on">✓</span>
+          <span class="body"><span class="nm">MURID CONTOH SATU</span></span>
+          <span class="pill present">出席</span>
+        </div>
+
+        <div class="foot">
+          <div class="btn ghost">取消</div>
+          <div class="btn sk-blue" style="flex:1;font-size:15.5px;color:var(--blue-ink)">标记出席</div>
+          <div class="btn" style="flex:1;font-size:15.5px;background:var(--amber-fill);border-color:var(--amber);color:var(--amber-ink)">设为缺勤</div>
+        </div>
+      </div>
+      <div class="cap">
+        <div class="t">批量选择</div>
+        <div class="d">勾选圈也是手绘方块；选择条与底部操作条同用荧光笔蓝</div>
+      </div>
+    </div>
+
+    <!-- 假因抽屉 -->
+    <div class="item">
+      <div class="notebook" style="height:600px;overflow:hidden">
+        <div class="spiral"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        <div class="holes"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+
+        <div class="tb" style="opacity:.45">
+          <div class="tb-class sk sk-sm sk-blue">TAHUN SATU B<span class="cv">▾</span></div>
+          <div class="tb-right"><span class="dot"></span><span class="tb-act">设置<span class="gear">⚙</span></span></div>
+        </div>
+        <div class="row excused" style="opacity:.45">
+          <span class="idx">1</span>
+          <span class="body"><span class="nm">AHMAD DANIAL BIN ROSLI</span>
+          <span class="rs">PEMBELAJARAN DI RUMAH</span></span>
+          <span class="pill excused">算出席</span>
+        </div>
+
+        <div class="sheet-wrap">
+          <div class="sheet">
+            <div class="grab"></div>
+            <div class="sh-t">批量设置缺勤原因</div>
+            <div class="sh-s">31 名学生：AHMAD DANIAL BIN ROSLI、NUR AISYAH BALQIS…</div>
+            <div class="chips">
+              <span class="chip on">常用</span>
+              <span class="chip">AKTIVITI…</span>
+              <span class="chip">BENCANA</span>
+            </div>
+            <div class="rlist">
+              <div class="ritem on">
+                <span class="rn">PEMBELAJARAN DI RUMAH</span><span class="rc">A0010072</span>
+              </div>
+              <div class="ritem">
+                <span class="rn">MAKLUMAN IBU BAPA PENJAGA</span><span class="rc">D0260001</span>
+              </div>
+              <div class="ritem">
+                <span class="rn">DEMAM</span><span class="rc">D0010075</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="cap">
+        <div class="t">假因抽屉</div>
+        <div class="d">抽屉也是一张纸，顶部加粗墨线当「撕口」；选中的原因是琥珀高亮</div>
+      </div>
+    </div>
+
+    <!-- 三态对照 -->
+    <div class="item">
+      <div class="notebook">
+        <div class="spiral"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        <div class="holes"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+
+        <div class="sec-h" style="margin:0 0 6px;font-size:19px">
+          <span class="sq"></span>三种状态
+        </div>
+        <p style="font-size:13.5px;color:var(--ink-soft);margin-bottom:16px;line-height:1.5">
+          颜色 + 手绘描边 + 文字标签三重编码，不依赖色相。
+        </p>
+
+        <div class="row">
+          <span class="idx" style="background:#EDEFE7;border-color:#C3CDB5;color:#4C6B3A">1</span>
+          <span class="body"><span class="nm">SITI KHADIJAH</span></span>
+          <span class="pill present">出席</span>
+        </div>
+        <div class="row excused">
+          <span class="idx">2</span>
+          <span class="body"><span class="nm">AHMAD DANIAL BIN ROSLI</span>
+          <span class="rs">PEMBELAJARAN DI RUMAH</span></span>
+          <span class="pill excused">算出席</span>
+        </div>
+        <div class="row absent">
+          <span class="idx" style="background:#FBEAE8;border-color:#E5B3B0;color:var(--red-ink)">3</span>
+          <span class="body"><span class="nm">MURID CONTOH SATU</span>
+          <span class="rs">MAKLUMAN IBU BAPA PENJAGA</span></span>
+          <span class="pill absent">缺席</span>
+        </div>
+
+        <div class="note sk sk-sm sk-green" style="margin-top:16px;color:var(--green-ink)">
+          <span>✓</span><span>已归档 · 2026-10-16 已由官方封存</span>
+        </div>
+      </div>
+      <div class="cap">
+        <div class="t">三态语义修正</div>
+        <div class="d">原版「算出席」行的事由文字是<b>红色</b>（缺席语义），这里改成琥珀 —— 一眼就不会误读</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ══════════════ 风格拆解 ══════════════ -->
+  <div class="sec-h"><span class="sq"></span>风格拆解</div>
+  <p class="sec-p">这套质感靠五件事撑起来，缺一件就会「像玩具」而不是「像手账」。</p>
+
+  <div class="cards">
+    <div class="card">
+      <h4><span class="num">1</span>纸与墨</h4>
+      <ul>
+        <li><b>米黄纸底 #FCF8EC</b>，不是纯白 —— 纯白会让手绘感瞬间消失</li>
+        <li><b>墨色 #2E2A24</b>，不是纯黑 —— 纯黑太硬，像印刷不像手写</li>
+        <li>纸张颗粒用三层错位径向渐变叠出来，<b>不是贴图</b></li>
+      </ul>
+    </div>
+    <div class="card">
+      <h4><span class="num">2</span>手绘边框</h4>
+      <ul>
+        <li>靠 <b>不对称 border-radius</b> 实现：<br><code style="font-size:12px">255px 14px 225px 14px / 14px 225px 14px 255px</code></li>
+        <li>四个角半径各不相同 → 线条「手抖」的自然感</li>
+        <li>描边统一 <b>2.2~2.8px</b>，太细没手感、太粗像卡通</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h4><span class="num">3</span>荧光笔蓝</h4>
+      <ul>
+        <li>外壳元素（按钮、序号、班级名）统一用 <b>#CFE1F7 + #9CC0E8 描边</b></li>
+        <li>加 <b>2.5px 3px 的实色偏移投影</b> —— 模拟马克笔叠涂的厚度</li>
+        <li>不用柔和阴影，柔和阴影是「现代 UI」的语言，会打架</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h4><span class="num">4</span>马克笔字</h4>
+      <ul>
+        <li>拉丁文用 <b>Kalam / Patrick Hand</b>，中文用 <b>站酷快乐体</b></li>
+        <li>名字 17.5px、加粗 700 —— 手写体要<b>比常规字号再大一号</b>才看得清</li>
+        <li>字距略微放松，手写体挤在一起会糊</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h4><span class="num">5</span>便签与涂鸦</h4>
+      <ul>
+        <li>提交按钮做成<b>黄色便签</b>并倾斜 -1.1° —— 整个界面唯一的「重」元素</li>
+        <li>星星、爱心、小猫做低透明度点缀，<b>绝不参与信息传达</b></li>
+        <li>线圈与纸孔是「这本子是真的」的关键锚点</li>
+      </ul>
+    </div>
+    <div class="card" style="border-color:var(--red);box-shadow:3px 4px 0 rgba(176,52,52,.18)">
+      <h4 style="color:var(--red-ink)"><span class="num" style="background:var(--red-fill);border-color:var(--red);color:var(--red-ink)">!</span>可读性红线</h4>
+      <ul>
+        <li>手写体<b>只适合短字符串</b>。马来文假因名（<i>SURAT CUTI SAKIT HOSPITAL/KLINIK</i>）用 13px 手写体扫视很吃力</li>
+        <li>建议：<b>外壳保持手绘，数据区用清晰体</b> —— 点上面的「清晰体」开关看效果</li>
+        <li>31 人的名单每天要扫两遍，<b>识别速度比好看重要</b></li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ══════════════ 色板 ══════════════ -->
+  <div class="sec-h" style="margin-top:64px"><span class="sq"></span>配色（全部通过 WCAG AA）</div>
+  <p class="sec-p">手账风最容易牺牲的就是对比度 —— 米黄纸底会吃掉一切浅色文字。这套配色逐个算过。</p>
+  <div class="sw-grid">
+    <div class="swc"><span class="chip-c" style="background:#2E2A24"></span>
+      <span class="tx"><span class="n">#2E2A24</span><span class="u">墨 · 纸底 13.9:1</span></span></div>
+    <div class="swc"><span class="chip-c" style="background:#6B6255"></span>
+      <span class="tx"><span class="n">#6B6255</span><span class="u">次要墨 · 纸底 5.6:1</span></span></div>
+    <div class="swc"><span class="chip-c" style="background:#2B4E78"></span>
+      <span class="tx"><span class="n">#2B4E78</span><span class="u">蓝墨 · 蓝底 6.4:1</span></span></div>
+    <div class="swc"><span class="chip-c" style="background:#9E5A00"></span>
+      <span class="tx"><span class="n">#9E5A00</span><span class="u">琥珀 · 琥珀底 4.8:1</span></span></div>
+    <div class="swc"><span class="chip-c" style="background:#B03434"></span>
+      <span class="tx"><span class="n">#B03434</span><span class="u">红 · 纸底 5.8:1</span></span></div>
+    <div class="swc"><span class="chip-c" style="background:#3F6B2C"></span>
+      <span class="tx"><span class="n">#3F6B2C</span><span class="u">绿 · 绿底 5.3:1</span></span></div>
+    <div class="swc"><span class="chip-c" style="background:#CFE1F7"></span>
+      <span class="tx"><span class="n">#CFE1F7</span><span class="u">荧光笔蓝（填充）</span></span></div>
+    <div class="swc"><span class="chip-c" style="background:#FCF8EC;border-color:rgba(46,42,36,.3)"></span>
+      <span class="tx"><span class="n">#FCF8EC</span><span class="u">纸张</span></span></div>
+  </div>
+
+  <p style="text-align:center;color:var(--muted);font-size:14px;margin-top:60px">
+    UI Designer · 2026-10-16 ｜ 手绘外壳 + 数据可读，两者可以兼得
+  </p>
+</div>
+
+<script>
+function setMode(m){
+  document.getElementById('root').classList.toggle('readable', m === 'read');
+  document.getElementById('btnHand').classList.toggle('on', m === 'hand');
+  document.getElementById('btnRead').classList.toggle('on', m === 'read');
+}
+</script>
+</body>
+</html>

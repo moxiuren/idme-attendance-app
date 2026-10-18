@@ -1,0 +1,13 @@
+{
+  "versionCode": 4,
+  "versionName": "1.3",
+  "apk": "https://github.com/moxiuren/idme-attendance-app/releases/download/v1.3/idMe-v1.3.apk",
+  "sha256": "6296efa815f2e75778734109a9983ff5bf48c04a840e2d7286b40ae095ca880a",
+  "size": 3157939,
+  "published": "2026-10-18",
+  "notes": {
+    "ms": "Antara muka Bahasa Inggeris ditambah. Peratus penuh kini dipaparkan tanpa titik perpuluhan (100%). Label bar statistik kini lebih besar dan berpusat.",
+    "en": "Added English interface. Full percentages now shown without decimals (100%). Statistic bar labels are larger and centred.",
+    "zh": "新增英文界面。百分比满值不再带小数（100%）。统计条标签字号加大并居中。"
+  }
+}

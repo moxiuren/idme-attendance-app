@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>idMe Kehadiran Pantas · Muat Turun APK</title>
+<meta name="description" content="Alat bantu guru merekod kehadiran murid dalam sistem idMe. Muat turun APK untuk Android.">
+<meta name="theme-color" content="#2B4E78">
+<meta property="og:type" content="website">
+<meta property="og:title" content="idMe Kehadiran Pantas · Muat Turun APK">
+<meta property="og:description" content="Satu ketikan untuk tanda semua murid hadir, satu butang untuk Kemaskini.">
+<meta property="og:image" content="assets/icon-512.png">
+<link rel="icon" href="assets/icon-64.png" sizes="64x64">
+<link rel="apple-touch-icon" href="assets/icon-192.png">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- ══════════════ 顶栏 ══════════════ -->
+<header class="topbar">
+  <div class="wrap topbar-in">
+    <a class="brand" href="#top">
+      <img class="brand-icon" src="assets/icon-64.png" alt="" width="34" height="34">
+      <span class="brand-name" data-i18n="brand">idMe Kehadiran Pantas</span>
+    </a>
+
+    <nav class="nav" aria-label="Seksyen">
+      <a href="#info"     data-i18n="navInfo">Maklumat Fail</a>
+      <a href="#install"  data-i18n="navInstall">Pemasangan</a>
+      <a href="#features" data-i18n="navFeatures">Ciri-ciri</a>
+      <a href="#faq"      data-i18n="navFaq">Soalan Lazim</a>
+    </nav>
+
+    <div class="lang" role="group" aria-label="Pilih Bahasa">
+      <button type="button" data-lang="ms" class="on">BM</button>
+      <button type="button" data-lang="zh">中文</button>
+    </div>
+  </div>
+</header>
+
+<!-- ══════════════ 首屏 ══════════════ -->
+<section class="hero" id="top">
+  <div class="wrap">
+    <div class="hero-card">
+
+      <div class="hero-head">
+        <img class="hero-icon" src="assets/icon-192.png" alt="idMe Kehadiran Pantas"
+             width="112" height="112">
+        <div class="hero-txt">
+          <!-- 版本 / 体积由 app.js 从 version.json 注入（data-live 标记）。
+               下面的内联值只是首屏未执行 JS 前的一帧占位，也是 file:// 打开
+               （fetch 被 CORS 挡）时的兜底 —— 不再是需要手工同步的第二事实源。 -->
+          <span class="chip">Android · <span data-live="size">3.0 MB</span></span>
+          <h1 data-i18n="brand">idMe Kehadiran Pantas</h1>
+          <p class="hero-sub" data-i18n="brandSub">Kementerian Pendidikan Malaysia · MOE Integrated System</p>
+          <p class="hero-tag" data-i18n="tagline">Alat bantu guru merekod kehadiran murid.</p>
+        </div>
+      </div>
+
+      <div class="hero-side">
+        <a class="btn-dl" id="dlTop" href="#info" rel="noopener">
+          <span class="btn-dl-ico" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor"
+                 stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 3v12"/><path d="M7 11l5 5 5-5"/><path d="M4 20h16"/>
+            </svg>
+          </span>
+          <span class="btn-dl-main" data-i18n="dl">Muat Turun APK</span>
+          <span class="btn-dl-sub">v<span data-live="version">1.3</span> · <span data-live="size">3.0 MB</span></span>
+        </a>
+        <a class="btn-ghost" href="#install" data-i18n="install">Cara Pemasangan</a>
+        <p class="hero-fine" data-i18n="dlNote">Perlu Android 7.0 ke atas · Benarkan pemasangan daripada sumber tidak diketahui</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<main class="wrap">
+
+  <!-- ══════════════ 文件信息 ══════════════ -->
+  <section class="card info-card" id="info">
+    <h2 class="sec-title" data-i18n="infoTitle">Maklumat Fail</h2>
+    <dl class="info-grid">
+      <div><dt data-i18n="fVersion">Versi</dt>
+        <dd><span data-live="version">1.3</span> <span class="dim">(code <span data-live="code">4</span>)</span></dd></div>
+      <div><dt data-i18n="fSize">Saiz Fail</dt><dd data-live="size">3.0 MB</dd></div>
+      <div><dt data-i18n="fReq">Keperluan Sistem</dt><dd>Android 7.0+ <span class="dim">(API 24)</span></dd></div>
+      <div><dt data-i18n="fUpdated">Dikemas kini</dt><dd data-live="published">2026-10-18</dd></div>
+      <div class="span2"><dt data-i18n="fPkg">Nama Pakej</dt>
+        <dd><code>my.gov.moe.idme.attendance</code></dd></div>
+      <div class="span2"><dt data-i18n="fCert">Cap Jari Sijil (SHA-256)</dt>
+        <dd class="cert">
+          <code id="sha" data-live="sha256">e647bf7a04814c80b08a5b572de1ac12e309f9ee13ca65b39a44077bbf81fd3d</code>
+          <button type="button" class="btn-copy" id="copy" data-i18n="copy">Salin</button>
+        </dd></div>
+      <div class="span2" id="notesRow" hidden><dt data-i18n="fNotes">Perubahan</dt>
+        <dd class="notes" id="notes"></dd></div>
+    </dl>
+    <p class="note" data-i18n="verifyBody">Sebelum memasang, bandingkan cap jari sijil APK dengan nilai di atas.</p>
+
+    <!-- ★ 换签名警告。v1.0.0 用的是旧密钥（CN=idme-local），v1.3 起换成了
+         CN=idMe Attendance —— 指纹不同，Android 就拒绝覆盖安装，老师看到的
+         只有「应用未安装」四个字，没有任何原因。这条必须显眼，不能塞进 FAQ。 -->
+    <p class="warn" data-i18n="upgradeWarn">
+      Sudah pasang versi lama? Nyahpasang dahulu, kemudian pasang versi ini.
+    </p>
+  </section>
+
+  <!-- ══════════════ 安装步骤 ══════════════ -->
+  <section class="sec" id="install">
+    <h2 class="sec-title" data-i18n="stepTitle">Cara Pemasangan</h2>
+    <p class="sec-sub" data-i18n="stepSub">Empat langkah, tidak sampai seminit.</p>
+
+    <ol class="steps">
+      <li class="step">
+        <span class="step-no">1</span>
+        <h3 data-i18n="step1t">Muat turun fail APK</h3>
+        <p data-i18n="step1b">Tekan butang muat turun di atas.</p>
+      </li>
+      <li class="step">
+        <span class="step-no">2</span>
+        <h3 data-i18n="step2t">Benarkan sumber tidak diketahui</h3>
+        <p data-i18n="step2b">Jika telefon bertanya, benarkan pemasangan daripada sumber tidak diketahui.</p>
+      </li>
+      <li class="step">
+        <span class="step-no">3</span>
+        <h3 data-i18n="step3t">Tekan "Pasang"</h3>
+        <p data-i18n="step3b">Tunggu sehingga selesai, kemudian tekan "Buka".</p>
+      </li>
+      <li class="step">
+        <span class="step-no">4</span>
+        <h3 data-i18n="step4t">Daftar masuk</h3>
+        <p data-i18n="step4b">Masukkan No. Kad Pengenalan dan Kata Laluan idMe anda.</p>
+      </li>
+    </ol>
+  </section>
+
+  <!-- ══════════════ 功能亮点 ══════════════ -->
+  <section class="sec" id="features">
+    <h2 class="sec-title" data-i18n="featTitle">Ciri-ciri Utama</h2>
+    <p class="sec-sub" data-i18n="featSub">Yang paling kerap digunakan semasa waktu pertama.</p>
+
+    <div class="feats">
+      <article class="feat"><h3 data-i18n="f1t">Satu ketikan, semua hadir</h3>
+        <p data-i18n="f1b">Tanda semua murid Hadir sekali ketik, kemudian Kemaskini.</p></article>
+      <article class="feat"><h3 data-i18n="f2t">Tiga keadaan kehadiran</h3>
+        <p data-i18n="f2b">Hadir, kategori A (PDPR / cuti), dan Tidak Hadir.</p></article>
+      <article class="feat"><h3 data-i18n="f3t">Laporan Bulanan + kalendar</h3>
+        <p data-i18n="f3b">Ketik mana-mana tarikh pada kalendar untuk terus buka senarai hari itu.</p></article>
+      <article class="feat"><h3 data-i18n="f4t">Pengesahan Bulanan</h3>
+        <p data-i18n="f4b">Simpan &amp; Sahkan untuk mengesahkan rekod sebulan.</p></article>
+      <article class="feat"><h3 data-i18n="f5t">Cetak Laporan (PDF)</h3>
+        <p data-i18n="f5b">Jana PDF terus daripada telefon.</p></article>
+      <article class="feat"><h3 data-i18n="f6t">Dua bahasa</h3>
+        <p data-i18n="f6b">Bahasa Melayu (lalai) dan Bahasa Cina.</p></article>
+    </div>
+  </section>
+
+  <!-- ══════════════ 常见问题 ══════════════ -->
+  <section class="sec" id="faq">
+    <h2 class="sec-title" data-i18n="faqTitle">Soalan Lazim</h2>
+
+    <div class="faqs">
+      <details class="faq"><summary data-i18n="q1">Mengapa telefon berkata "sumber tidak diketahui"?</summary>
+        <p data-i18n="a1">APK ini diedarkan di luar Google Play.</p></details>
+      <details class="faq"><summary data-i18n="q2">Adakah aplikasi ini mengumpul data saya?</summary>
+        <p data-i18n="a2">Tidak.</p></details>
+      <details class="faq"><summary data-i18n="q3">Adakah ini aplikasi rasmi?</summary>
+        <p data-i18n="a3">Bukan.</p></details>
+      <details class="faq"><summary data-i18n="q4">Pemasangan gagal — apa perlu saya buat?</summary>
+        <p data-i18n="a4">Pastikan telefon anda Android 7.0 ke atas.</p></details>
+    </div>
+  </section>
+
+  <!-- ══════════════ 末尾再给一次下载 ══════════════ -->
+  <section class="card endcard">
+    <div>
+      <h2 class="end-title" data-i18n="brand">idMe Kehadiran Pantas</h2>
+      <p class="end-sub">v<span data-live="version">1.3</span> · <span data-live="size">3.0 MB</span> · Android 7.0+</p>
+    </div>
+    <a class="btn-dl btn-dl-sm" id="dlBottom" href="#info" rel="noopener">
+      <span class="btn-dl-main" data-i18n="dl">Muat Turun APK</span>
+    </a>
+  </section>
+
+</main>
+
+<footer class="foot">
+  <div class="wrap foot-in">
+    <p data-i18n="footNote">Alat bantu tidak rasmi. Bukan produk rasmi Kementerian Pendidikan Malaysia.</p>
+    <p class="dim" data-i18n="footRight">Rekod kehadiran kekal dalam sistem idMe rasmi.</p>
+  </div>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,91 @@
+# ===== 依赖 =====
+node_modules/
+.venv/
+venv/
+__pycache__/
+*.pyc
+
+# ===== 构建产物 =====
+dist/
+build/
+out/
+# mobile-app/tools/out/ —— fetch-official-strings.mjs 抓取的官网页面（含账号相关 HTML），
+# 属产物且可能含个人信息，靠上面的 `out/` 通配覆盖
+target/
+*.egg-info/
+mobile-app/android/app/build/
+mobile-app/android/build/
+mobile-app/android/.gradle/
+mobile-app/android/app/src/main/assets/public/
+mobile-app/release/
+
+# ===== 敏感文件（严禁提交）=====
+credentials.json
+credentials*.json
+*.keystore
+*.jks
+*.p12
+.env
+.env.*
+# 签名口令文件。比 *.keystore 本身更危险：拿到 keystore 还需口令才能用，
+# 拿到这份明文口令就能签任意包。模板 keystore.properties.example 入库，本体不入库。
+keystore.properties
+
+# ===== 二进制产物 =====
+# 注意：download-site/download/*.apk 也被这条挡掉（有意为之）——
+# 下载站的页面与图标入库，APK 本身不入库（git 历史不可删，每版永久 +3MB）。
+# 部署前由 mobile-app/tools/publish-release.mjs 把签名好的包拷进去：
+#   cd mobile-app && node tools/publish-release.mjs android/app/build/outputs/apk/release/app-release.apk
+*.apk
+*.idsig
+*.exe
+*.aab
+
+# ===== 浏览器/抓包 profile（体积巨大）=====
+cdp_profile/
+temp_pdf_profile/
+.runtime/
+
+# ===== 旧 Rust 项目（独立 git 仓库，体积巨大 820M）=====
+src-rust/
+
+# ===== 项目根临时测试产物（截图 / 导出 / DOM dump）=====
+/*.png
+/*.pdf
+/*.html
+
+# ===== 真机截图（含真实学生姓名与班级，**不入库**）=====
+# 这些是用真实班级跑出来的界面截图，逐张打码不现实。
+# 2026-10-17 决定：从 git 移除、本地保留 —— 不再随仓库分发。
+docs/screenshots-ui/
+
+# ===== 调试残留（**不入库**）=====
+# scratch/ 是抓真实 MOEIS 站点时留下的探针脚本与截图，含登录后的页面 DOM、
+# 真实班级界面截图，以及脚本里可能内联的会话参数。属于「用完即弃」的取证材料，
+# 不是项目资产 —— 2026-10-18 起明确排除。
+scratch/
+mobile-app/scratch/
+
+# ===== 真实班级/学生数据（**不入库**）=====
+# 2026-10-18 仓库转 public 前逐项审查补上。这类文件是抓取/导出留下的，
+# 含真实姓名与成绩，一旦进了 public 仓库就等同公开学生数据。
+/*PBD*.json
+/*_PBD*.json
+/students_*.json
+/*.json
+
+# ===== 临时测试产物 =====
+test_*.html
+test_*.pdf
+test_*.png
+*.bak
+_rewrite-backup-*/
+*.log
+_tmp*
+*.tmp
+
+# ===== 编辑器 / 系统 =====
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db

@@ -1,0 +1,289 @@
+/* 基础：设计令牌 / 重置 / 启动登录页 / 表单控件 */
+
+/* ============================================================
+   idMe 点名 · 教师端样式
+   风格：手账（纸张底 + 手绘边框 + 马克笔厚度）
+   字体：清晰体优先
+         Android 无中文手写体，cursive 通用族会 fallback 成黑体，
+         强行用会既不像手写又拖慢扫视 —— 手绘感全部交给形状与材质。
+   原则：日光可读 / 大字号 / 大触控区 / 单页无跳转
+   ============================================================ */
+
+:root {
+  /* ── 纸与墨 ── */
+  --paper:      #fcf8ec;
+  --paper-2:    #f6f0e0;
+  --paper-edge: #ede5d2;
+  --ink:        #2e2a24;   /* 纸底 13.9:1 */
+  --ink-soft:   #6b6255;   /* 纸底  5.6:1 */
+
+  /* ── 荧光笔蓝 —— 界面外壳 ── */
+  --blue-fill:  #cfe1f7;
+  --blue-edge:  #9cc0e8;
+  --blue-ink:   #2b4e78;   /* 蓝底 6.4:1 */
+
+  /* ── 三态语义 ── */
+  /* 出席 */
+  --green:      #3f6b2c;   /* 绿字 / 绿底 5.3:1 */
+  --green-bg:   #e4f0da;
+  --green-edge: #8fb878;
+  /* 算出席（琥珀） */
+  --amber:      #9e5a00;   /* 琥珀字 / 琥珀底 5.3:1  ← 原 #b26a00 仅 4.0:1 */
+  --amber-bg:   #fdf0d8;
+  --amber-edge: #d98e1f;
+  /* 缺席（红） */
+  --red:        #b03434;   /* 红字 / 纸底 5.8:1 */
+  --red-bg:     #fbe4e2;
+  --red-edge:   #d24b4b;
+
+  /* ── 便签（主 CTA） ── */
+  --sticky:      #fff0a8;
+  --sticky-edge: #e3c95e;
+  --sticky-ink:  #6b5711;  /* 便签底 6.1:1 */
+
+  /* ── 兼容别名（既有类名继续可用） ── */
+  --bg:        var(--paper);
+  --surface:   #ffffff;
+  --line:      #c6bda9;
+  --text:      var(--ink);
+  --text-dim:  var(--ink-soft);
+  --primary:   var(--blue-ink);
+  --primary-d: #1f3a5a;
+  --blue-bg:   var(--blue-fill);
+
+  /* ── 手绘几何 ──
+     四套圆角，**四个角各自的半径都不同**，按卡片序号循环使用。
+     为什么不是一个值：手账里每一张纸都是单独剪的，四角不会剪成同一个弧度。
+     旧版用同一个精确值套满 15 处组件，反而暴露了它是模板 ——
+     「每张都剪得分毫不差」比「剪得整齐」更像机器做的。
+     控件（按钮 / 输入框 / 标签）不参与循环，用固定的 --r-sk-sm：
+     它们是印刷品，本来就规整。 */
+  --r:       14px;
+  --r-s:     10px;
+  --r-sk:    255px 14px 225px 14px / 14px 225px 14px 255px;
+  --r-sk-sm: 190px 11px 170px 11px / 11px 170px 11px 190px;
+  --r-pill:  200px 10px 190px 10px / 10px 190px 10px 200px;
+
+  /* 纸张循环：半径随机 ±10%，肉眼分辨不出差别，但四张并排就能看出不是同一张 */
+  --r-p1: 248px 16px 233px 12px / 13px 241px 15px 226px;
+  --r-p2: 221px 12px 259px 15px / 17px 219px 11px 252px;
+  --r-p3: 262px 14px 214px 13px / 12px 254px 16px 231px;
+  --r-p4: 236px 11px 247px 17px / 16px 228px 13px 244px;
+
+  /* ── 马克笔厚度：实色偏移投影，不用模糊 ──
+     同样按序号微调方向：纸叠纸时每张压的位置都不一样。
+     差 0.5px 就够 —— 再多就变成「歪」而不是「手放」了。 */
+  --mk:      2.5px 3px 0 rgba(46, 42, 36, .16);
+  --mk-sm:   1.5px 2px 0 rgba(46, 42, 36, .13);
+  --mk-blue: 2.5px 3px 0 rgba(43, 78, 120, .14);
+  --mk-p1:   1.5px 2px 0 rgba(46, 42, 36, .13);
+  --mk-p2:   2px 1.5px 0 rgba(46, 42, 36, .12);
+  --mk-p3:   1.5px 2.5px 0 rgba(46, 42, 36, .14);
+  --mk-p4:   2px 2px 0 rgba(46, 42, 36, .11);
+
+  /* ── 触控目标（P0-4：一律 ≥ 44px） ── */
+  --tap:     48px;
+  --tap-min: 44px;
+
+  /* ── 字体：清晰体 ── */
+  --f-ui: -apple-system, "Segoe UI", Roboto, "Noto Sans SC",
+          "PingFang SC", "Microsoft YaHei", sans-serif;
+  --f-num: ui-monospace, "SF Mono", "Roboto Mono", "Menlo", monospace;
+}
+
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+html, body, #app {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+body {
+  background: var(--paper);
+  color: var(--text);
+  font-family: var(--f-ui);
+  font-size: 15px;
+  line-height: 1.45;
+  overscroll-behavior: none;
+}
+
+/* 焦点可见（键盘 / 无障碍）—— 只在键盘导航时出现，不干扰触屏 */
+:focus-visible {
+  outline: 3px solid var(--blue-ink);
+  outline-offset: 2px;
+}
+
+/* 数字一律等宽，便于逐行比对 */
+.stat-num, .date-text, .row-idx, .reason-code, .boot-progress {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ==================== 启动 / 登录 ==================== */
+.boot {
+  min-height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 18px;
+  /* 上半页「荧光笔涂过」的蓝，下半页露出纸张。
+     刻意用 38% 而不是 40%、160deg 而不是 170deg —— 圆整的百分比和角度
+     是生成式 CSS 最典型的指纹：人手涂色不会正好停在 40%，
+     也不会把整片色块摆得与屏幕边框完全平行。 */
+  background:
+    radial-gradient(ellipse at 20% 0%, rgba(160, 145, 115, .07) 0%, transparent 55%),
+    linear-gradient(160deg, var(--blue-ink) 0%, #3a648f 38%, var(--paper) 38%);
+}
+.boot-card {
+  position: relative;
+  width: 100%;
+  max-width: 400px;
+  background: var(--surface);
+  border: 2.5px solid var(--ink);
+  border-radius: var(--r-sk);
+  padding: 26px 22px 22px;
+  box-shadow: var(--mk);
+}
+.boot-logo {
+  display: inline-block;
+  background: var(--blue-fill);
+  border: 2.2px solid var(--blue-edge);
+  color: var(--blue-ink);
+  font-weight: 800;
+  font-size: 15px;
+  letter-spacing: .5px;
+  padding: 5px 12px;
+  border-radius: var(--r-pill);
+}
+.boot-title {
+  font-size: 27px;
+  margin: 14px 0 2px;
+  /* 去掉 letter-spacing: 1px —— 标题加宽字距是「设计感」的默认动作，
+     而手账标题是写上去的，字距跟着手走、不会均匀拉开。
+     同时把行高收紧一点，让它像一行手写而不是一段排版。 */
+  line-height: 1.15;
+  color: var(--ink);
+}
+.boot-progress {
+  margin: 12px 0 0;
+  font-size: 13px;
+  color: var(--blue-ink);
+  text-align: center;
+}
+.boot-note {
+  margin: 14px 0 0;
+  font-size: 12px;
+  color: var(--text-dim);
+  text-align: center;
+}
+
+/* 作者落款。
+   位置与形态的取舍：
+     · 右对齐、不居中 —— 手账的签名落在角落，居中小字是「生成页脚」的长相
+     · 微旋转 -1.4deg —— 手写时纸是随手摆的，正的反而像印刷
+     · 手写体来自自带子集字体（--f-hand，见 fonts.css）—— 只含
+       「小莫出品」四个字，几 KB 的 woff2；系统字体没有可用的中文手写体
+     · 原来下方那道斜横线已去掉：有了真正的手写字形，再画线就成了双重修饰，
+       像「签名 + 下划线」的公文格式，反而更假
+     · 颜色取 --text-dim 而非更淡 —— 它是签名，不是免责声明，不该淡到看不见 */
+.boot-sign {
+  /* width:fit-content + margin-left:auto = 靠右且宽度贴合文字。
+     比 float 干净：不用清浮动，也不会让父级高度塌陷。 */
+  display: block;
+  width: fit-content;
+  margin: 16px 2px 0 auto;
+  font-family: var(--f-hand);
+  /* 手写体本身笔画细，字号要给够；12.5px 在 2 倍屏上墨色会糊成一片 */
+  font-size: 16px;
+  letter-spacing: .5px;
+  color: var(--text-dim);
+  transform: rotate(-1.4deg);
+}
+
+/* ==================== 表单 ==================== */
+.field { display: block; margin-bottom: 16px; }
+.field-label {
+  display: block;
+  font-size: 13px;
+  color: var(--text-dim);
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+.input {
+  width: 100%;
+  min-height: var(--tap);
+  padding: 0 14px;
+  font-size: 17px;
+  color: var(--text);
+  background: #fff;
+  border: 2.2px solid var(--line);
+  border-radius: var(--r-sk-sm);
+  outline: none;
+  font-family: inherit;
+}
+.input:focus {
+  border-color: var(--blue-edge);
+  box-shadow: 0 0 0 3px rgba(43, 78, 120, .14);
+}
+.input-sm { min-height: var(--tap-min); font-size: 15px; padding: 0 10px; }
+
+/* 只读（脱敏）输入框：底色与文字都退一档，明示「这不是可编辑状态」 */
+.input-ro {
+  background: var(--paper-2);
+  color: var(--ink-soft);
+  border-style: dashed;
+}
+
+/* 输入框右侧的显隐开关（P0-2）—— 图标按钮 */
+.input-wrap { position: relative; display: block; }
+.input-wrap .input { padding-right: 58px; }
+.input-act {
+  position: absolute;
+  right: 5px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--tap-min);
+  min-height: var(--tap-min);
+  padding: 0;
+  color: var(--blue-ink);
+  background: var(--blue-fill);
+  border: 2px solid var(--blue-edge);
+  border-radius: var(--r-pill);
+  cursor: pointer;
+}
+
+/* ==================== 语言切换 ==================== */
+.lang-seg {
+  display: flex;
+  gap: 6px;
+}
+.lang-opt {
+  flex: 1;
+  min-height: var(--tap);
+  padding: 0 10px;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: inherit;
+  color: var(--ink-soft);
+  background: #fff;
+  border: 2.2px solid var(--line);
+  border-radius: var(--r-sk-sm);
+  cursor: pointer;
+}
+.lang-opt:active { background: var(--paper-2); }
+.lang-on {
+  color: var(--blue-ink);
+  background: var(--blue-fill);
+  border-color: var(--blue-edge);
+  box-shadow: var(--mk-blue);
+}
+
+/* 表单标签里的小图标 */
+.lbl-ic {
+  display: inline-block;
+  vertical-align: -2px;
+  margin-right: 5px;
+}

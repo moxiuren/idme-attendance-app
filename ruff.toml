@@ -1,0 +1,24 @@
+# ruff.toml — Python 静态检查统一配置
+# 放到项目根目录，配合 `ruff check .` 与 `ruff format .` 使用
+# 安装: pip install ruff
+
+target-version = "py311"
+line-length = 100
+
+[lint]
+# E/W pycodestyle  F pyflakes  I isort  UP pyupgrade
+# B bugbear  C4 comprehension  SIM simplify  RUF ruff 特定规则
+select = ["E", "F", "W", "I", "UP", "B", "C4", "SIM", "RUF"]
+ignore = [
+    "E501",   # 行宽交给 formatter
+    "B008",   # 允许函数默认参数里的调用（FastAPI 依赖注入等）
+]
+
+[lint.per-file-ignores]
+"__init__.py" = ["F401"]      # 允许 re-export
+"tests/**" = ["B011"]         # 测试里允许 assert False
+
+[format]
+quote-style = "preserve"
+indent-style = "space"
+line-ending = "lf"

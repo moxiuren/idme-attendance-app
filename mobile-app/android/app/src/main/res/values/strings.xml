@@ -1,0 +1,8 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <!-- 桌面图标下的名字。15 字符，多数 launcher 不会截断。 -->
+    <string name="app_name">idMe Attendance</string>
+    <string name="title_activity_main">idMe Attendance</string>
+    <string name="package_name">my.gov.moe.idme.attendance</string>
+    <string name="custom_url_scheme">my.gov.moe.idme.attendance</string>
+</resources>

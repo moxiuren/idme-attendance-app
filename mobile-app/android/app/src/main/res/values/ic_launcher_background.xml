@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 自适应图标背景色。必须与 tools/make-icon.py 里的 BLUE 常量
+     （即 base.css 的 blue-ink 令牌）一致，否则前景卡片周围的留白会出现色差。 -->
+<resources>
+    <color name="ic_launcher_background">#2B4E78</color>
+</resources>

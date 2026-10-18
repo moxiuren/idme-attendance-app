@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>idMe 点名 App · UI 优化方案</title>
+<style>
+/* ============================================================
+   本页自身样式（非 App 样式）
+   ============================================================ */
+* { box-sizing: border-box; }
+body {
+  margin: 0; padding: 40px 24px 80px;
+  background: #eef1f5;
+  color: #1f2328;
+  font-family: -apple-system, "Segoe UI", Roboto, "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-size: 15px; line-height: 1.6;
+}
+.wrap { max-width: 1180px; margin: 0 auto; }
+h1 { font-size: 30px; margin: 0 0 6px; letter-spacing: -.5px; }
+.sub { color: #656d76; font-size: 14px; margin: 0 0 8px; }
+.meta { color: #8b939c; font-size: 13px; margin: 0 0 36px; }
+h2 {
+  font-size: 20px; margin: 48px 0 4px; padding-top: 24px;
+  border-top: 2px solid #d8dee4;
+}
+h2 .num {
+  display: inline-block; min-width: 30px; height: 30px; line-height: 30px;
+  text-align: center; background: #1a5fb4; color: #fff; border-radius: 8px;
+  font-size: 15px; margin-right: 10px; vertical-align: 2px;
+}
+h2 + .desc { color: #656d76; font-size: 14px; margin: 0 0 22px; }
+h3 { font-size: 15px; margin: 0 0 10px; color: #1f2328; }
+h3 .tag {
+  font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px;
+  margin-left: 8px; vertical-align: 2px;
+}
+.tag-before { background: #fde3e1; color: #c62828; }
+.tag-after  { background: #e8f5ec; color: #1a7f37; }
+
+/* 并排容器 */
+.pair { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; align-items: start; }
+@media (max-width: 860px) { .pair { grid-template-columns: 1fr; } }
+
+.frame {
+  background: #fff; border: 1px solid #d8dee4; border-radius: 14px;
+  padding: 16px; box-shadow: 0 2px 10px rgba(16,40,80,.05);
+}
+.frame.bad  { border-color: #f0b4b0; }
+.frame.good { border-color: #b7dfc5; }
+
+/* ============================================================
+   App 组件预览（复刻真实样式）
+   ============================================================ */
+.app-preview { background: #f2f4f7; border-radius: 10px; padding: 0; overflow: hidden; }
+
+/* --- 学生行 · 现状 --- */
+.row-cur {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 14px; margin-bottom: 8px;
+  background: #fff; border: 1.5px solid #d8dee4; border-radius: 12px;
+  min-height: 62px; font-family: inherit;
+}
+.row-cur.excused { background: #fff6e5; border-color: #ecd9a8; }
+.row-cur.absent  { background: #fdeceb; border-color: #f0b4b0; }
+.row-cur .idx { width: 26px; font-size: 14px; font-weight: 700; color: #656d76; text-align: center; }
+.row-cur .body { flex: 1; min-width: 0; }
+.row-cur .nm { font-size: 17px; font-weight: 600; }
+.row-cur .rs { font-size: 12px; color: #c62828; }
+.row-cur .st { font-size: 13px; font-weight: 700; padding: 5px 12px; border-radius: 20px; }
+.row-cur .st.present { background: #e8f5ec; color: #1a7f37; }
+.row-cur .st.excused { background: #fff; color: #b26a00; border: 1.5px solid #b26a00; }
+.row-cur .st.absent  { background: #fff; color: #c62828; border: 1.5px solid #c62828; }
+
+/* --- 学生行 · 建议 --- */
+.row-new {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 14px 10px 0; margin-bottom: 8px;
+  background: #fff; border: 1.5px solid #d8dee4; border-left: none;
+  border-radius: 12px; overflow: hidden;
+  min-height: 62px; font-family: inherit;
+}
+.row-new .bar { width: 4px; align-self: stretch; flex-shrink: 0; background: transparent; }
+.row-new.excused { background: #fff6e5; border-color: #ecd9a8; }
+.row-new.excused .bar { background: #965700; }
+.row-new.absent  { background: #fde3e1; border-color: #f0b4b0; }
+.row-new.absent .bar { background: #c62828; }
+.row-new .idx { width: 26px; font-size: 14px; font-weight: 700; color: #656d76; text-align: center; }
+.row-new .body { flex: 1; min-width: 0; }
+.row-new .nm { font-size: 17px; font-weight: 600; }
+.row-new .rs { font-size: 13px; }
+.row-new.excused .rs { color: #965700; }
+.row-new.absent  .rs { color: #c62828; }
+.row-new .st {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 13px; font-weight: 700; padding: 5px 12px; border-radius: 999px;
+}
+.row-new .st.present { background: #e8f5ec; color: #1a7f37; }
+.row-new .st.excused { background: #fff; color: #965700; border: 1.5px solid #965700; }
+.row-new .st.absent  { background: #fff; color: #c62828; border: 1.5px solid #c62828; }
+
+/* --- 顶栏 --- */
+.topbar-cur {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 8px; padding: 8px 12px; background: #fff; border-bottom: 1px solid #d8dee4;
+}
+.tb-class {
+  display: flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 12px;
+  font-size: 18px; font-weight: 700; color: #1a5fb4; background: #eaf1fb;
+  border: none; border-radius: 8px; font-family: inherit;
+}
+.tb-right { display: flex; align-items: center; gap: 2px; }
+.ib {
+  min-height: 40px; padding: 0 12px; font-size: 14px; font-weight: 600;
+  color: #1a5fb4; background: transparent; border: none; border-radius: 8px; font-family: inherit;
+}
+.ib.on { color: #fff; background: #1a5fb4; }
+.conn { width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; background: #22c55e; box-shadow: 0 0 0 3px rgba(34,197,94,.18); }
+
+.topbar-new {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 8px; padding: 8px 12px; background: #fff; border-bottom: 1px solid #d8dee4;
+}
+.tb-status {
+  display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: #656d76;
+  padding: 0 8px; height: 44px;
+}
+.ib2 {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 44px; min-height: 44px; gap: 6px; padding: 0 12px;
+  font-size: 14px; font-weight: 600; color: #1a5fb4;
+  background: transparent; border: none; border-radius: 8px; font-family: inherit;
+}
+.ib2 .ic { font-size: 18px; line-height: 1; }
+
+/* --- 吸底栏 --- */
+.ab-cur {
+  display: flex; gap: 10px; padding: 10px 12px; background: #fff;
+  border-top: 1px solid #d8dee4; box-shadow: 0 -3px 14px rgba(16,40,80,.07);
+}
+.btn-cur {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  min-height: 52px; padding: 0 18px; font-size: 16px; font-weight: 600;
+  font-family: inherit; color: #1f2328; background: #fff;
+  border: 1.5px solid #d8dee4; border-radius: 8px; flex: 1; text-align: center;
+}
+.btn-cur.ghost { background: transparent; color: #656d76; flex: 0 0 auto; }
+.btn-cur.amber { background: #b26a00; border-color: #b26a00; color: #fff; font-size: 17px; }
+.btn-cur.primary { background: #1a5fb4; border-color: #1a5fb4; color: #fff; }
+
+.ab-new {
+  padding: 10px 12px 12px; background: #fff;
+  border-top: 1px solid #d8dee4; box-shadow: 0 -3px 14px rgba(16,40,80,.07);
+}
+.ab-new .sum { font-size: 13px; color: #656d76; text-align: center; margin-bottom: 8px; }
+.ab-new .sum b { color: #1f2328; }
+.ab-new .btns { display: flex; gap: 10px; }
+.btn-new {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  min-height: 52px; padding: 0 18px; font-size: 17px; font-weight: 600;
+  font-family: inherit; border-radius: 8px; flex: 1;
+}
+.btn-new.primary { background: #1a5fb4; border: 1.5px solid #1a5fb4; color: #fff; }
+.btn-new.amber   { background: #965700; border: 1.5px solid #965700; color: #fff; }
+.btn-new.ghost   { background: transparent; border: 1.5px solid #d8dee4; color: #656d76; flex: 0 0 auto; }
+
+/* --- 统计条 --- */
+.stats {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px;
+  background: #d8dee4; border-bottom: 1px solid #d8dee4;
+}
+.stat { background: #fff; padding: 10px 4px; text-align: center; }
+.stat .n { font-size: 22px; font-weight: 800; line-height: 1.1; }
+.stat .l { font-size: 11px; color: #656d76; margin-top: 2px; }
+.note-cur { padding: 7px 12px; font-size: 12px; color: #b26a00; background: #fff6e5; border-bottom: 1px solid #d8dee4; }
+.note-new { padding: 7px 12px; font-size: 12px; color: #965700; background: #fff6e5; border-bottom: 1px solid #d8dee4; }
+
+/* --- 确认抽屉（建议新增） --- */
+.confirm-demo {
+  background: rgba(16,24,40,.45); border-radius: 10px; padding: 40px 14px 0;
+  display: flex; align-items: flex-end; justify-content: center; min-height: 300px;
+}
+.confirm-card {
+  width: 100%; max-width: 380px; background: #fff;
+  border-radius: 18px 18px 0 0; padding: 20px 18px 18px;
+  box-shadow: 0 -8px 30px rgba(16,40,80,.2);
+}
+.confirm-card .ct { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+.confirm-card .cb { font-size: 14px; color: #656d76; margin-bottom: 6px; }
+.confirm-card .cw { font-size: 13px; color: #c62828; font-weight: 600; margin-bottom: 16px; }
+.confirm-card .btns { display: flex; flex-direction: column; gap: 8px; }
+.cbtn {
+  min-height: 48px; border-radius: 8px; font-size: 16px; font-weight: 600;
+  font-family: inherit; display: flex; align-items: center; justify-content: center;
+}
+.cbtn.danger  { background: #c62828; border: 1.5px solid #c62828; color: #fff; }
+.cbtn.neutral { background: transparent; border: 1.5px solid #d8dee4; color: #656d76; }
+
+/* ============================================================
+   令牌表
+   ============================================================ */
+table { width: 100%; border-collapse: collapse; font-size: 13.5px; background: #fff; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 10px rgba(16,40,80,.05); }
+th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid #e6eaee; }
+th { background: #f7f9fb; font-size: 12px; color: #656d76; font-weight: 700; letter-spacing: .3px; }
+tr:last-child td { border-bottom: none; }
+.sw { display: inline-block; width: 20px; height: 20px; border-radius: 5px; border: 1px solid rgba(0,0,0,.12); vertical-align: -4px; margin-right: 7px; }
+code { font-family: "JetBrains Mono", Consolas, monospace; font-size: 12.5px; background: #f2f4f7; padding: 1.5px 6px; border-radius: 5px; }
+.badge { display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px; }
+.b-pass { background: #e8f5ec; color: #1a7f37; }
+.b-fail { background: #fde3e1; color: #c62828; }
+.b-fix  { background: #eaf1fb; color: #1a5fb4; }
+
+/* 问题卡 */
+.issue {
+  background: #fff; border-left: 4px solid #c62828; border-radius: 10px;
+  padding: 16px 18px; margin-bottom: 14px; box-shadow: 0 2px 10px rgba(16,40,80,.05);
+}
+.issue.p1 { border-left-color: #965700; }
+.issue.p2 { border-left-color: #656d76; }
+.issue h4 { margin: 0 0 6px; font-size: 15.5px; }
+.issue h4 .lv { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: #fde3e1; color: #c62828; margin-right: 8px; vertical-align: 2px; }
+.issue.p1 h4 .lv { background: #fff6e5; color: #965700; }
+.issue.p2 h4 .lv { background: #f2f4f7; color: #656d76; }
+.issue p { margin: 0 0 8px; font-size: 14px; color: #3d444d; }
+.issue p:last-child { margin-bottom: 0; }
+.evidence {
+  background: #1f2328; color: #d6dde4; font-family: "JetBrains Mono", Consolas, monospace;
+  font-size: 12px; padding: 10px 12px; border-radius: 8px; overflow-x: auto;
+  margin: 8px 0; line-height: 1.5; white-space: pre;
+}
+.evidence .hl { color: #ff9a8a; font-weight: 700; }
+
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+@media (max-width: 760px) { .grid2 { grid-template-columns: 1fr; } }
+.pill { display: inline-block; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 999px; background: #eaf1fb; color: #1a5fb4; margin: 0 6px 6px 0; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>idMe 点名 App · UI 优化方案</h1>
+  <p class="sub">现状评审 → 问题定位 → 令牌提案 → 组件改造</p>
+  <p class="meta">评审：UI Designer ｜ 2026-10-16 ｜ 对象：mobile-app/src（8 组件 + 4 CSS 分片，2306 行）｜ 真机：vivo V2324HA · Android 16 · 1260×2800</p>
+
+  <!-- ============ 1 对比度 ============ -->
+  <h2><span class="num">1</span>颜色令牌与对比度审计</h2>
+  <p class="desc">按 WCAG 2.1 AA 逐项实测（正文 4.5:1；≥18.66px 粗体或 ≥24px 常规为 3:1）。<strong>4 项不合格全部由同一个令牌引起 —— <code>--amber</code> 偏亮。</strong></p>
+
+  <table>
+    <thead>
+      <tr><th>用途</th><th>前景 / 背景</th><th>实测</th><th>要求</th><th>判定</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>正文</td><td><span class="sw" style="background:#1f2328"></span><code>#1f2328</code> on <code>#f2f4f7</code></td><td>14.34</td><td>4.5</td><td><span class="badge b-pass">PASS</span></td></tr>
+      <tr><td>次要文字</td><td><span class="sw" style="background:#656d76"></span><code>#656d76</code> on <code>#ffffff</code></td><td>5.25</td><td>4.5</td><td><span class="badge b-pass">PASS</span></td></tr>
+      <tr><td>主按钮（蓝）</td><td><span class="sw" style="background:#1a5fb4"></span><code>#ffffff</code> on <code>#1a5fb4</code></td><td>6.29</td><td>4.5</td><td><span class="badge b-pass">PASS</span></td></tr>
+      <tr><td><strong>琥珀按钮（主提交 CTA）</strong></td><td><span class="sw" style="background:#b26a00"></span><code>#ffffff</code> on <code>#b26a00</code></td><td><strong>4.24</strong></td><td>4.5</td><td><span class="badge b-fail">FAIL</span></td></tr>
+      <tr><td>标签「出席」</td><td><span class="sw" style="background:#1a7f37"></span><code>#1a7f37</code> on <code>#e8f5ec</code></td><td>4.52</td><td>4.5</td><td><span class="badge b-pass">PASS</span></td></tr>
+      <tr><td>标签「缺席」</td><td><span class="sw" style="background:#c62828"></span><code>#c62828</code> on <code>#ffffff</code></td><td>5.62</td><td>4.5</td><td><span class="badge b-pass">PASS</span></td></tr>
+      <tr><td><strong>标签「算出席」</strong></td><td><span class="sw" style="background:#b26a00"></span><code>#b26a00</code> on <code>#ffffff</code></td><td><strong>4.24</strong></td><td>4.5</td><td><span class="badge b-fail">FAIL</span></td></tr>
+      <tr><td>行事由（算出席行）</td><td><span class="sw" style="background:#c62828"></span><code>#c62828</code> on <code>#fff6e5</code></td><td>5.24</td><td>4.5</td><td><span class="badge b-pass">PASS</span></td></tr>
+      <tr><td>行事由（缺席行）</td><td><span class="sw" style="background:#c62828"></span><code>#c62828</code> on <code>#fdeceb</code></td><td>4.92</td><td>4.5</td><td><span class="badge b-pass">PASS</span></td></tr>
+      <tr><td><strong>统计说明条</strong></td><td><span class="sw" style="background:#b26a00"></span><code>#b26a00</code> on <code>#fff6e5</code></td><td><strong>3.95</strong></td><td>4.5</td><td><span class="badge b-fail">FAIL</span></td></tr>
+      <tr><td><strong>日期标签「未归档」</strong></td><td><span class="sw" style="background:#b26a00"></span><code>#b26a00</code> on <code>#fff6e5</code></td><td><strong>3.95</strong></td><td>4.5</td><td><span class="badge b-fail">FAIL</span></td></tr>
+      <tr><td>日期标签「已归档」</td><td><span class="sw" style="background:#1a7f37"></span><code>#1a7f37</code> on <code>#e8f5ec</code></td><td>4.52</td><td>4.5</td><td><span class="badge b-pass">PASS</span></td></tr>
+      <tr><td>分类 chip 选中</td><td><span class="sw" style="background:#1a5fb4"></span><code>#1a5fb4</code> on <code>#eaf1fb</code></td><td>5.53</td><td>4.5</td><td><span class="badge b-pass">PASS</span></td></tr>
+      <tr><td>提示条</td><td><span class="sw" style="background:#1a5fb4"></span><code>#1a5fb4</code> on <code>#eaf1fb</code></td><td>5.53</td><td>4.5</td><td><span class="badge b-pass">PASS</span></td></tr>
+    </tbody>
+  </table>
+
+  <h3 style="margin-top:26px">修正：<code>--amber</code> 候选值评估</h3>
+  <table>
+    <thead><tr><th>候选值</th><th>on <code>#fff6e5</code></th><th>on <code>#ffffff</code></th><th>结论</th></tr></thead>
+    <tbody>
+      <tr><td><span class="sw" style="background:#b26a00"></span><code>#b26a00</code>（现状）</td><td>3.95</td><td>4.24</td><td><span class="badge b-fail">不合格</span></td></tr>
+      <tr><td><span class="sw" style="background:#a05f00"></span><code>#a05f00</code></td><td>4.74</td><td>5.08</td><td><span class="badge b-pass">勉强合格</span></td></tr>
+      <tr><td><span class="sw" style="background:#965700"></span><code>#965700</code></td><td><strong>5.35</strong></td><td><strong>5.74</strong></td><td><span class="badge b-fix">★ 推荐</span></td></tr>
+      <tr><td><span class="sw" style="background:#8f5400"></span><code>#8f5400</code></td><td>5.69</td><td>6.11</td><td><span class="badge b-pass">合格（偏深）</span></td></tr>
+    </tbody>
+  </table>
+  <p class="desc" style="margin-top:12px">改为 <code>--amber: #965700</code> —— <strong>一行改动，4 项全部转 PASS</strong>，且仍保有清晰的琥珀观感，不会与红色混淆。</p>
+
+  <!-- ============ 2 学生行 ============ -->
+  <h2><span class="num">2</span>学生行 · 三态可辨识度</h2>
+  <p class="desc">现状用「底色 + 右侧文字标签」两重编码。但 <code>--red-bg #fdeceb</code> 与 <code>--amber-bg #fff6e5</code> 色相仅差约 12°、亮度都在 97% 附近 —— <strong>教室强光下几乎无法区分</strong>。建议加左侧色条，把颜色降级为辅助信号。</p>
+
+  <div class="pair">
+    <div class="frame bad">
+      <h3>现状 <span class="tag tag-before">仅底色区分</span></h3>
+      <div class="app-preview" style="padding:12px">
+        <div class="row-cur">
+          <span class="idx">1</span>
+          <span class="body"><span class="nm">AHMAD DANIAL BIN ROSLI</span></span>
+          <span class="st present">出席</span>
+        </div>
+        <div class="row-cur excused">
+          <span class="idx">2</span>
+          <span class="body"><span class="nm">NUR AISYAH BALQIS</span><br><span class="rs">PEMBELAJARAN DI RUMAH</span></span>
+          <span class="st excused">算出席</span>
+        </div>
+        <div class="row-cur absent" style="margin-bottom:0">
+          <span class="idx">3</span>
+          <span class="body"><span class="nm">TAN WEI MING</span><br><span class="rs">MAKLUMAN IBU BAPA PENJAGA</span></span>
+          <span class="st absent">缺席</span>
+        </div>
+      </div>
+      <p class="desc" style="margin:12px 0 0;font-size:13px">⚠️ 第 2、3 行底色相近；「算出席」标签对比度 4.24 不达标</p>
+    </div>
+
+    <div class="frame good">
+      <h3>建议 <span class="tag tag-after">色条 + 图标 + 标签</span></h3>
+      <div class="app-preview" style="padding:12px">
+        <div class="row-new">
+          <span class="bar"></span>
+          <span class="idx">1</span>
+          <span class="body"><span class="nm">AHMAD DANIAL BIN ROSLI</span></span>
+          <span class="st present">✓ 出席</span>
+        </div>
+        <div class="row-new excused">
+          <span class="bar"></span>
+          <span class="idx">2</span>
+          <span class="body"><span class="nm">NUR AISYAH BALQIS</span><br><span class="rs">PEMBELAJARAN DI RUMAH</span></span>
+          <span class="st excused">◐ 算出席</span>
+        </div>
+        <div class="row-new absent" style="margin-bottom:0">
+          <span class="bar"></span>
+          <span class="idx">3</span>
+          <span class="body"><span class="nm">TAN WEI MING</span><br><span class="rs">MAKLUMAN IBU BAPA PENJAGA</span></span>
+          <span class="st absent">✕ 缺席</span>
+        </div>
+      </div>
+      <p class="desc" style="margin:12px 0 0;font-size:13px">✅ 左侧 4px 色条提供不依赖色相的通道；底色加深拉开明度；标签带图标冗余编码</p>
+    </div>
+  </div>
+
+  <!-- ============ 3 顶栏 ============ -->
+  <h2><span class="num">3</span>顶栏 · 信息架构与触控目标</h2>
+  <p class="desc">现状 4 个交互目标挤在约 56px 高的顶栏里，三个文字按钮仅 40px 高（<strong>低于 WCAG 最低 44px</strong>），「批量」的激活态仅靠变色，连接状态只有一个小圆点。</p>
+
+  <div class="pair">
+    <div class="frame bad">
+      <h3>现状 <span class="tag tag-before">40px · 纯文字</span></h3>
+      <div class="app-preview">
+        <div class="topbar-cur">
+          <button class="tb-class">TAHUN SATU B</button>
+          <div class="tb-right">
+            <span class="conn"></span>
+            <button class="ib">批量</button>
+            <button class="ib">报表</button>
+            <button class="ib">设置</button>
+          </div>
+        </div>
+        <div class="stats">
+          <div class="stat"><div class="n">31</div><div class="l">在籍</div></div>
+          <div class="stat"><div class="n" style="color:#1a7f37">31</div><div class="l">出席</div></div>
+          <div class="stat"><div class="n" style="color:#8b939c">0</div><div class="l">缺席</div></div>
+          <div class="stat"><div class="n" style="color:#1a5fb4">100.0%</div><div class="l">出席率</div></div>
+        </div>
+        <div class="note-cur">含 31 人「算出席」（请假 / 居家学习，官方不扣出席率）</div>
+      </div>
+      <p class="desc" style="margin:12px 0 0;font-size:13px">⚠️ 触控 40px ＜ 44px；「绿点」无文字含义不明；统计说明对比度 3.95</p>
+    </div>
+
+    <div class="frame good">
+      <h3>建议 <span class="tag tag-after">44px · 图标化 · 状态显性</span></h3>
+      <div class="app-preview">
+        <div class="topbar-new">
+          <button class="tb-class">TAHUN SATU B</button>
+          <div class="tb-right">
+            <span class="tb-status"><span class="conn" style="margin:0"></span>已连接</span>
+            <button class="ib2"><span class="ic">▤</span>报表</button>
+            <button class="ib2"><span class="ic">⚙</span>设置</button>
+          </div>
+        </div>
+        <div class="stats">
+          <div class="stat"><div class="n">31</div><div class="l">在籍</div></div>
+          <div class="stat"><div class="n" style="color:#1a7f37">31</div><div class="l">出席</div></div>
+          <div class="stat"><div class="n" style="color:#8b939c">0</div><div class="l">缺席</div></div>
+          <div class="stat"><div class="n" style="color:#1a5fb4">100.0%</div><div class="l">出席率</div></div>
+        </div>
+        <div class="note-new">含 31 人「算出席」（请假 / 居家学习，官方不扣出席率）</div>
+      </div>
+      <p class="desc" style="margin:12px 0 0;font-size:13px">✅ 触控 44px；状态带文字；「批量」下移为吸底主操作，顶栏只留两个低频入口；说明条对比度 5.35</p>
+    </div>
+  </div>
+
+  <!-- ============ 4 吸底栏 ============ -->
+  <h2><span class="num">4</span>吸底操作栏 · 文案与层级</h2>
+  <p class="desc">现状主按钮文案 <code>确认提交 · 0 人缺席 · 31 人算出席</code> 在 1260px 设备上<strong>已换行成两行</strong>，挤占吸底高度。建议按钮只留动作，数字摘要上移。</p>
+
+  <div class="pair">
+    <div class="frame bad">
+      <h3>现状 <span class="tag tag-before">文案过长 · 对比度不足</span></h3>
+      <div class="app-preview" style="padding-top:12px">
+        <div class="ab-cur">
+          <button class="btn-cur ghost">全部出席</button>
+          <button class="btn-cur amber">确认提交 · 0 人缺席 · 31 人算出席</button>
+        </div>
+      </div>
+      <p class="desc" style="margin:12px 0 0;font-size:13px">⚠️ 白字 / <code>#b26a00</code> = 4.24（不达标）；文案折行</p>
+    </div>
+
+    <div class="frame good">
+      <h3>建议 <span class="tag tag-after">摘要上移 · 动作聚焦</span></h3>
+      <div class="app-preview" style="padding-top:12px">
+        <div class="ab-new">
+          <div class="sum"><b>31 人</b>算出席（居家学习）· <b>0 人</b>缺席</div>
+          <div class="btns">
+            <button class="btn-new ghost">全部出席</button>
+            <button class="btn-new amber">确认提交归档</button>
+          </div>
+        </div>
+      </div>
+      <p class="desc" style="margin:12px 0 0;font-size:13px">✅ 白字 / <code>#965700</code> = 5.74；按钮单行，动作一目了然</p>
+    </div>
+  </div>
+
+  <!-- ============ 5 确认抽屉 ============ -->
+  <h2><span class="num">5</span>破坏性操作确认 · 替换原生 <code>confirm()</code></h2>
+  <p class="desc">现状 4 处使用浏览器原生 <code>confirm()</code> —— WebView 渲染的系统对话框字体、圆角、按钮排布、语言全部脱离设计系统。<strong>提交是唯一的破坏性操作，确认界面却最不可控。</strong>建议抽 <code>&lt;ConfirmSheet&gt;</code>。</p>
+
+  <div class="pair">
+    <div class="frame bad">
+      <h3>现状 <span class="tag tag-before">系统对话框</span></h3>
+      <div class="app-preview" style="padding:20px 12px">
+        <div style="background:#fff;border:1px solid #c3ccd4;border-radius:4px;padding:14px 16px;max-width:300px;margin:20px auto;box-shadow:0 6px 20px rgba(0,0,0,.2)">
+          <div style="font-size:15px;font-weight:700;margin-bottom:8px;color:#000">idMe 点名</div>
+          <div style="font-size:13px;color:#333;margin-bottom:16px">该日期已归档，提交将覆盖服务端现有记录。确认继续？</div>
+          <div style="display:flex;justify-content:flex-end;gap:20px;font-size:13px;font-weight:600;color:#1a5fb4">
+            <span>取消</span><span>确定</span>
+          </div>
+        </div>
+      </div>
+      <p class="desc" style="margin:12px 0 0;font-size:13px">⚠️ 样式不可控；破坏性操作与普通确认无视觉区分</p>
+    </div>
+
+    <div class="frame good">
+      <h3>建议 <span class="tag tag-after">ConfirmSheet</span></h3>
+      <div class="confirm-demo">
+        <div class="confirm-card">
+          <div class="ct">覆盖已归档记录？</div>
+          <div class="cb">2026-10-16 已由官方归档。提交将用当前名单覆盖服务端现有记录。</div>
+          <div class="cw">此操作不可撤销</div>
+          <div class="btns">
+            <button class="cbtn danger">确认覆盖并提交</button>
+            <button class="cbtn neutral">取消</button>
+          </div>
+        </div>
+      </div>
+      <p class="desc" style="margin:12px 0 0;font-size:13px">✅ 沿用抽屉视觉；破坏性动作红底主按钮 + 显式风险文案</p>
+    </div>
+  </div>
+
+  <!-- ============ 6 问题清单 ============ -->
+  <h2><span class="num">6</span>问题清单</h2>
+  <p class="desc">按严重度分级。<strong>P0 是唯一会直接打断工作流的一类。</strong></p>
+
+  <div class="issue">
+    <h4><span class="lv">P0</span>系统返回键穿透抽屉，直接退出 App</h4>
+    <p>真机实测复现：打开「设置」抽屉后按一次系统返回键，<strong>整个 App 退到桌面</strong>。教师凭肌肉记忆按返回，批量选择到一半的状态全部丢失，需重新登录同步。</p>
+    <div class="evidence">1) 拉起 idMe      → topResumedActivity = my.gov.moe.idme.attendance/.MainActivity
+2) 打开「设置」抽屉 → topResumedActivity = my.gov.moe.idme.attendance/.MainActivity
+3) 按一次返回键     → topResumedActivity = <span class="hl">bitpit.launcher/.ui.HomeActivity</span>   ← 退出了</div>
+    <p><strong>修复</strong>：Capacitor <code>App.addListener('backButton')</code> 逐层关闭抽屉，全部关完才 <code>exitApp()</code>。</p>
+  </div>
+
+  <div class="issue">
+    <h4><span class="lv">P0</span>身份证号明文显示 + 密码无显隐切换</h4>
+    <p>设置页把身份证号以明文完整渲染（真机截图确认）。教师常在办公室、教室等有旁人环境使用，截图/投屏/借机即泄露。密码框也没有显示/隐藏开关。</p>
+    <p><strong>修复</strong>：默认脱敏 <code>9612••••••5087</code>（保留首尾各 4 位便于自检），加显隐切换；密码同理；离开设置页复位为隐藏。</p>
+  </div>
+
+  <div class="issue">
+    <h4><span class="lv">P0</span>4 组配色未达 WCAG AA（含主提交按钮）</h4>
+    <p>见第 1 节审计表。四项全部由 <code>--amber: #b26a00</code> 偏亮引起，改为 <code>#965700</code> 即可一次性解决。</p>
+  </div>
+
+  <div class="issue">
+    <h4><span class="lv">P0</span>触控目标低于 44px</h4>
+    <p><code>.icon-btn</code> 40px、<code>.selbar-btn</code> 38px、<code>.chip</code> 42px，均低于 WCAG 2.5.5 最低 44px。顶栏与批量选择条是高频操作区，颠簸环境易误触。</p>
+  </div>
+
+  <div class="issue p1">
+    <h4><span class="lv">P1</span>原生 <code>confirm()</code> 与设计系统割裂</h4>
+    <p><code>App.vue</code> 中 4 处 <code>confirm()</code>（全部提交相关）。见第 5 节。</p>
+  </div>
+
+  <div class="issue p1">
+    <h4><span class="lv">P1</span>缺少设计令牌体系</h4>
+    <p>颜色已成体系，但实际代码里散落 <strong>11 档字号、16 档间距、5 档圆角、4 种阴影</strong>。这是间距不匀、字号跳跃、层级混乱的根源。</p>
+    <p><span class="pill">--sp-1…10</span><span class="pill">--fs-xs…3xl</span><span class="pill">--r-xs…full</span><span class="pill">--shadow-sm/md/lg</span><span class="pill">--dur-fast/base/slow</span><span class="pill">--z-sheet/toast/confirm</span></p>
+  </div>
+
+  <div class="issue p1">
+    <h4><span class="lv">P1</span>缺少空态 / 加载态 / 错误态</h4>
+    <p>切换日期时列表先闪空再填满；空态文案「点下方按钮重新同步」<strong>但下方并没有该按钮</strong>；无骨架屏，首屏白屏。</p>
+  </div>
+
+  <div class="issue p1">
+    <h4><span class="lv">P1</span>无可见焦点样式</h4>
+    <p>所有按钮 / 输入 / 行均未定义 <code>:focus-visible</code>，键盘与 TalkBack 导航下用户不知道焦点在哪。</p>
+  </div>
+
+  <div class="issue p2">
+    <h4><span class="lv">P2</span>精修项</h4>
+    <p>无深色模式 · 列表密度固定 · 状态切换无过渡 · 无图标系统 · 抽屉打开未锁背景滚动 · 设置页暴露开发者信息（「假因词条 98 项 · 12 分类」）· 登录页渐变硬切在 42%</p>
+  </div>
+
+  <!-- ============ 7 排期 ============ -->
+  <h2><span class="num">7</span>建议实施顺序</h2>
+  <p class="desc">前 5 项投入极小、收益最大，建议一次性完成并重新出包。</p>
+  <table>
+    <thead><tr><th>#</th><th>项目</th><th>影响</th><th>工作量</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>P0-1 返回键接管</td><td>阻断性缺陷</td><td>小（~15 行）</td></tr>
+      <tr><td>2</td><td>P0-3 <code>--amber</code> → <code>#965700</code></td><td>4 项 WCAG 转 PASS</td><td><strong>极小（1 行）</strong></td></tr>
+      <tr><td>3</td><td>P0-2 身份证号脱敏</td><td>隐私合规</td><td>小</td></tr>
+      <tr><td>4</td><td>P0-4 触控目标 → 44px</td><td>误触率</td><td>小</td></tr>
+      <tr><td>5</td><td>P1-5 焦点样式</td><td>无障碍</td><td>极小</td></tr>
+      <tr><td>6</td><td>P1-2 设计令牌体系</td><td>后续一切调整的成本</td><td>中</td></tr>
+      <tr><td>7</td><td>P1-3 状态色 + 左侧色条</td><td>强光 / 色觉障碍可读性</td><td>小</td></tr>
+      <tr><td>8</td><td>P1-1 ConfirmSheet</td><td>破坏性操作可控性</td><td>中</td></tr>
+      <tr><td>9</td><td>P1-4 骨架屏 / 空态</td><td>感知性能</td><td>中</td></tr>
+      <tr><td>10</td><td>P1-6 顶栏重构</td><td>信息架构</td><td>中</td></tr>
+    </tbody>
+  </table>
+
+  <p class="meta" style="margin-top:36px">
+    评审依据：WCAG 2.1 AA · Material Design 3 触控规范 · iOS HIG 最小触控 44pt<br>
+    完整报告见 <code>docs/UI-REVIEW.md</code>；对比度复跑 <code>python docs/contrast-audit.py</code>
+  </p>
+</div>
+</body>
+</html>

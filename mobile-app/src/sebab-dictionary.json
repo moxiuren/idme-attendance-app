@@ -1,0 +1,492 @@
+[
+  {
+    "code": "A0010072",
+    "name": "PEMBELAJARAN DI RUMAH",
+    "kategori": "A"
+  },
+  {
+    "code": "B0010073",
+    "name": "WAKIL SEKOLAH",
+    "kategori": "B"
+  },
+  {
+    "code": "D0010001",
+    "name": "COVID 19 BERGEJALA",
+    "kategori": "D"
+  },
+  {
+    "code": "D0010058",
+    "name": "MENJALANI TERAPI/RAWATAN/KUARANTIN",
+    "kategori": "D"
+  },
+  {
+    "code": "D0010075",
+    "name": "DEMAM",
+    "kategori": "D"
+  },
+  {
+    "code": "D0010077",
+    "name": "RAWATAN KLINIK GIGI",
+    "kategori": "D"
+  },
+  {
+    "code": "D0020002",
+    "name": "COVID 19 DENGAN KEBENARAN IBUBAPA",
+    "kategori": "D"
+  },
+  {
+    "code": "D0020059",
+    "name": "TEMUJANJI HOSPITAL/KLINIK",
+    "kategori": "D"
+  },
+  {
+    "code": "D0030003",
+    "name": "COVID 19 DIKUARANTIN",
+    "kategori": "D"
+  },
+  {
+    "code": "D0040004",
+    "name": "COVID 19 PENGGILIRAN",
+    "kategori": "D"
+  },
+  {
+    "code": "D0050005",
+    "name": "BATUK KOKOL",
+    "kategori": "D"
+  },
+  {
+    "code": "D0060006",
+    "name": "BEGUK",
+    "kategori": "D"
+  },
+  {
+    "code": "D0060063",
+    "name": "IMUNISASI RENDAH",
+    "kategori": "D"
+  },
+  {
+    "code": "D0070007",
+    "name": "CACAR AIR",
+    "kategori": "D"
+  },
+  {
+    "code": "D0080008",
+    "name": "CHIKUNGUNYA",
+    "kategori": "D"
+  },
+  {
+    "code": "D0090009",
+    "name": "DENGGI",
+    "kategori": "D"
+  },
+  {
+    "code": "D0100010",
+    "name": "SWINE FLU (H1N1)",
+    "kategori": "D"
+  },
+  {
+    "code": "D0110011",
+    "name": "HEPATITIS",
+    "kategori": "D"
+  },
+  {
+    "code": "D0120012",
+    "name": "HAND, FOOT AND MOUTH DISEASE (HFMD)",
+    "kategori": "D"
+  },
+  {
+    "code": "D0130013",
+    "name": "INFLUENZA",
+    "kategori": "D"
+  },
+  {
+    "code": "D0130070",
+    "name": "TANTRUM (MBK)",
+    "kategori": "D"
+  },
+  {
+    "code": "D0140014",
+    "name": "JAPANESE ENCEPHALITIS (JE)",
+    "kategori": "D"
+  },
+  {
+    "code": "D0140071",
+    "name": "TIDAK MELEPASI SARINGAN KESIHATAN (MBK)",
+    "kategori": "D"
+  },
+  {
+    "code": "D0150015",
+    "name": "LEPTOSPIROSIS (PENYAKIT KENCING TIKUS)",
+    "kategori": "D"
+  },
+  {
+    "code": "D0160016",
+    "name": "KUDIS BUTA",
+    "kategori": "D"
+  },
+  {
+    "code": "D0160073",
+    "name": "MENDAPATKAN RAWATAN TRADISIONAL",
+    "kategori": "D"
+  },
+  {
+    "code": "D0170017",
+    "name": "MALARIA",
+    "kategori": "D"
+  },
+  {
+    "code": "D0170053",
+    "name": "TEKANAN EMOSI",
+    "kategori": "D"
+  },
+  {
+    "code": "D0170074",
+    "name": "KEMURUNGAN",
+    "kategori": "D"
+  },
+  {
+    "code": "D0180018",
+    "name": "MERS COV",
+    "kategori": "D"
+  },
+  {
+    "code": "D0190019",
+    "name": "SAKIT MATA",
+    "kategori": "D"
+  },
+  {
+    "code": "D0200020",
+    "name": "SARS",
+    "kategori": "D"
+  },
+  {
+    "code": "D0210021",
+    "name": "TAUN",
+    "kategori": "D"
+  },
+  {
+    "code": "D0220022",
+    "name": "TIBI",
+    "kategori": "D"
+  },
+  {
+    "code": "D0240024",
+    "name": "SAKIT MISTIK",
+    "kategori": "D"
+  },
+  {
+    "code": "D0250025",
+    "name": "SAKIT MENTAL",
+    "kategori": "D"
+  },
+  {
+    "code": "D0260001",
+    "name": "MAKLUMAN IBU BAPA PENJAGA",
+    "kategori": "D"
+  },
+  {
+    "code": "D0260020",
+    "name": "KECEDERAAN/PATAH TULANG",
+    "kategori": "D"
+  },
+  {
+    "code": "D0260030",
+    "name": "SURAT CUTI SAKIT HOSPITAL/KLINIK",
+    "kategori": "D"
+  },
+  {
+    "code": "E0010076",
+    "name": "DIGANTUNG SEKOLAH",
+    "kategori": "E"
+  },
+  {
+    "code": "G0010078",
+    "name": "URUSAN PEPERIKSAAN",
+    "kategori": "G"
+  },
+  {
+    "code": "I0030026",
+    "name": "TEKANAN PERASAAN/TRAUMA",
+    "kategori": "I"
+  },
+  {
+    "code": "I0070030",
+    "name": "KESAKITAN AKIBAT HAID/PERMULAAN HAID",
+    "kategori": "I"
+  },
+  {
+    "code": "J0010027",
+    "name": "PEREBUTAN HAK PENJAGAAN ANAK",
+    "kategori": "J"
+  },
+  {
+    "code": "J0010037",
+    "name": "KRISIS KELUARGA",
+    "kategori": "J"
+  },
+  {
+    "code": "J0020025",
+    "name": "KEMISKINAN/KESEMPITAN HIDUP",
+    "kategori": "J"
+  },
+  {
+    "code": "J0020028",
+    "name": "KEMATIAN AHLI KELUARGA TERDEKAT",
+    "kategori": "J"
+  },
+  {
+    "code": "J0040030",
+    "name": "MENGIKUT KELUARGA BERCUTI/BERKURSUS",
+    "kategori": "J"
+  },
+  {
+    "code": "J0050031",
+    "name": "MENJAGA/MENGURUSKAN AHLI KELUARGA",
+    "kategori": "J"
+  },
+  {
+    "code": "J0060029",
+    "name": "LARI DARI RUMAH",
+    "kategori": "J"
+  },
+  {
+    "code": "J0060032",
+    "name": "MENJAGA AHLI KELUARGA YANG SAKIT",
+    "kategori": "J"
+  },
+  {
+    "code": "J0070033",
+    "name": "MENZIARAHI KELUARGA SAKIT",
+    "kategori": "J"
+  },
+  {
+    "code": "J0080034",
+    "name": "BERPINDAH RANDAH",
+    "kategori": "J"
+  },
+  {
+    "code": "J0090035",
+    "name": "MASALAH PENGANGKUTAN",
+    "kategori": "J"
+  },
+  {
+    "code": "J0150072",
+    "name": "BEKERJA",
+    "kategori": "J"
+  },
+  {
+    "code": "J1100037",
+    "name": "BALIK KAMPUNG",
+    "kategori": "J"
+  },
+  {
+    "code": "J1200038",
+    "name": "BERPINDAH KE LUAR NEGARA",
+    "kategori": "J"
+  },
+  {
+    "code": "K0020038",
+    "name": "UGUTAN DARIPADA PIHAK LUAR",
+    "kategori": "K"
+  },
+  {
+    "code": "K0050041",
+    "name": "DICULIK",
+    "kategori": "K"
+  },
+  {
+    "code": "K0060042",
+    "name": "GANGGUAN MISTIK/MAKHLUK HALUS",
+    "kategori": "K"
+  },
+  {
+    "code": "K0070043",
+    "name": "KEBAKARAN",
+    "kategori": "K"
+  },
+  {
+    "code": "K0080044",
+    "name": "PENGGANAS/LANUN",
+    "kategori": "K"
+  },
+  {
+    "code": "K0090045",
+    "name": "GANGGUAN KUMPULAN KONGSI GELAP",
+    "kategori": "K"
+  },
+  {
+    "code": "K0120048",
+    "name": "RUSUHAN DI LUAR KAWASAN SEKOLAH",
+    "kategori": "K"
+  },
+  {
+    "code": "K0130049",
+    "name": "BINATANG LIAR/BUAS/BERBISA",
+    "kategori": "K"
+  },
+  {
+    "code": "K0150051",
+    "name": "MANGSA BULI",
+    "kategori": "K"
+  },
+  {
+    "code": "K0160052",
+    "name": "MANGSA SEKSUAL",
+    "kategori": "K"
+  },
+  {
+    "code": "K0180054",
+    "name": "TIDAK DAPAT DIKESAN/HILANG",
+    "kategori": "K"
+  },
+  {
+    "code": "L0010050",
+    "name": "BANJIR",
+    "kategori": "L"
+  },
+  {
+    "code": "L0020051",
+    "name": "GEMPA BUMI",
+    "kategori": "L"
+  },
+  {
+    "code": "L0030052",
+    "name": "HUJAN LEBAT/RIBUT TAUFAN",
+    "kategori": "L"
+  },
+  {
+    "code": "L0040053",
+    "name": "PENCEMARAN UDARA",
+    "kategori": "L"
+  },
+  {
+    "code": "L0050054",
+    "name": "KEMARAU",
+    "kategori": "L"
+  },
+  {
+    "code": "L0060055",
+    "name": "CUACA PANAS EL NINO",
+    "kategori": "L"
+  },
+  {
+    "code": "L0070056",
+    "name": "PENCEMARAN SISA KIMIA",
+    "kategori": "L"
+  },
+  {
+    "code": "L0080057",
+    "name": "TANAH RUNTUH",
+    "kategori": "L"
+  },
+  {
+    "code": "L0080058",
+    "name": "PENCEMARAN ALAM",
+    "kategori": "L"
+  },
+  {
+    "code": "L0080059",
+    "name": "JEREBU",
+    "kategori": "L"
+  },
+  {
+    "code": "L0080060",
+    "name": "KEMALANGAN",
+    "kategori": "L"
+  },
+  {
+    "code": "M0030060",
+    "name": "HAJI/UMRAH/KEGIATAN AGAMA",
+    "kategori": "M"
+  },
+  {
+    "code": "M0070064",
+    "name": "PERTANDINGAN/AKTIVITI SELAIN KPM",
+    "kategori": "M"
+  },
+  {
+    "code": "M0080065",
+    "name": "PEPERIKSAAN/UJIAN SELAIN KPM",
+    "kategori": "M"
+  },
+  {
+    "code": "M0090066",
+    "name": "TERLIBAT KES JENAYAH",
+    "kategori": "M"
+  },
+  {
+    "code": "M0100067",
+    "name": "TERLIBAT KES TRAFIK",
+    "kategori": "M"
+  },
+  {
+    "code": "M0110068",
+    "name": "URUSAN RASMI AGENSI KERAJAAN",
+    "kategori": "M"
+  },
+  {
+    "code": "M0120069",
+    "name": "PROSES PERPINDAHAN SEKOLAH",
+    "kategori": "M"
+  },
+  {
+    "code": "M0170074",
+    "name": "LATIHAN/UJIAN LESEN MEMANDU",
+    "kategori": "M"
+  },
+  {
+    "code": "M0180075",
+    "name": "TAHANAN PIHAK BERKUASA",
+    "kategori": "M"
+  },
+  {
+    "code": "M0190076",
+    "name": "TERLIBAT PROSIDING MAHKAMAH",
+    "kategori": "M"
+  },
+  {
+    "code": "M0200077",
+    "name": "CUTI SEMESTER",
+    "kategori": "M"
+  },
+  {
+    "code": "M0200078",
+    "name": "MENJALANI LATIHAN INDUSTRI",
+    "kategori": "M"
+  },
+  {
+    "code": "M0200079",
+    "name": "PERLINDUNGAN JABATAN KEBAJIKAN MASYARAKAT",
+    "kategori": "M"
+  },
+  {
+    "code": "N0010024",
+    "name": "BANGUN LEWAT",
+    "kategori": "N"
+  },
+  {
+    "code": "N0040027",
+    "name": "MALAS KE SEKOLAH",
+    "kategori": "N"
+  },
+  {
+    "code": "N0080031",
+    "name": "KETAGIHAN GAJET",
+    "kategori": "N"
+  },
+  {
+    "code": "N0090032",
+    "name": "TIDAK MENYIAPKAN KERJA SEKOLAH",
+    "kategori": "N"
+  },
+  {
+    "code": "N0100033",
+    "name": "MALAS KE AKTIVITI KOKURIKULUM",
+    "kategori": "N"
+  },
+  {
+    "code": "P0270084",
+    "name": "SEKOLAH DALAM HOSPITAL",
+    "kategori": "P"
+  }
+]

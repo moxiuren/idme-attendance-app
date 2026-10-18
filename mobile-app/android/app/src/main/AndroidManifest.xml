@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <application
+        android:allowBackup="false"
+        android:fullBackupContent="false"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:usesCleartextTraffic="false"
+        android:theme="@style/AppTheme">
+
+        <!-- 锁定竖屏（2026-10-16 用户要求：界面不跟随屏幕旋转）。
+             样式系统按 360dp 宽预算，横屏会撑破格子，因此直接锁死方向。
+             targetSdk=34 → 不受 Android 16「大屏忽略方向锁」规则影响；
+             本机 1260×2800 / 360dp 亦属手机形态，锁定稳定生效。
+             configChanges 保留 orientation|screenSize：即便系统强制触发配置变更
+             （如多窗口），Activity 也不会被重建，WebView 状态不丢。 -->
+        <activity
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode"
+            android:screenOrientation="portrait"
+            android:name=".MainActivity"
+            android:label="@string/title_activity_main"
+            android:theme="@style/AppTheme.NoActionBarLaunch"
+            android:launchMode="singleTask"
+            android:exported="true">
+
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+        </activity>
+
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths"></meta-data>
+        </provider>
+    </application>
+
+    <!-- Permissions -->
+
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <!-- 应用内自更新：调起系统安装器需要此权限（Android 8.0+ 起为逐应用开关，
+         默认关闭，由用户在设置里授予）。不加则 ACTION_VIEW 被系统静默拦掉，
+         用户点了「安装」毫无反应。注意：这**不是**静默安装能力，
+         每次仍会弹系统确认框。 -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+</manifest>

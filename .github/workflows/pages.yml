@@ -1,0 +1,43 @@
+# 把 download-site/ 发布到 GitHub Pages。
+#
+# 为什么用 Actions 而不是「分支 /docs」模式：
+#   1. 站点在子目录 download-site/，而分支模式只认根目录或 /docs，
+#      改目录就得挪动整个项目结构；
+#   2. Actions 模式部署的是构建产物，仓库里不需要保留任何发布中间态。
+#
+# ★ APK 不在仓库里 —— 它被 .gitignore 挡掉，只作为 Release 附件存在。
+#   站点上的下载按钮由 app.js 从 version.json 读出 Release 地址。
+name: Deploy download site
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'download-site/**'
+      - '.github/workflows/pages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# 同一时间只允许一个部署；不取消进行中的，避免把半成品推上线
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: download-site
+      - id: deployment
+        uses: actions/deploy-pages@v4
