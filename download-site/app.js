@@ -20,6 +20,8 @@ const I18N = {
     tagline: 'Alat bantu guru merekod kehadiran murid — satu ketikan untuk tanda semua hadir, satu butang untuk Kemaskini.',
     dl: 'Muat Turun APK',
     dlNote: 'Perlu Android 7.0 ke atas · Benarkan pemasangan daripada sumber tidak diketahui',
+    dlCountPre: 'Telah dimuat turun',
+    dlCountSuf: 'kali',
     install: 'Cara Pemasangan',
 
     navInfo: 'Maklumat Fail',
@@ -89,6 +91,8 @@ const I18N = {
     tagline: '给教师用的点名工具 —— 一键全班出席，一个按钮提交。',
     dl: '下载 APK',
     dlNote: '需要 Android 7.0 及以上 · 需允许安装未知来源',
+    dlCountPre: '已被下载',
+    dlCountSuf: '次',
     install: '安装说明',
 
     navInfo: '文件信息',
@@ -206,6 +210,68 @@ fetch('version.json', { cache: 'no-cache' })
   .then(r => (r.ok ? r.json() : Promise.reject(new Error('HTTP ' + r.status))))
   .then(m => { manifest = m; renderLive(); })
   .catch(e => console.warn('[version.json] 未加载，沿用页面内联值：', e.message));
+
+/* ══════════════ 累计下载数 ══════════════
+   数据源是 GitHub Release 附件自带的 download_count —— 浏览器每次点击
+   Release 下载都会让这个数加一，不需要我们埋任何东西。
+
+   为什么单独写一个函数而不是塞进 renderLive：
+   renderLive 依赖 version.json（自家静态文件，必到）；这个依赖 GitHub API
+   （第三方、有 60 次/小时的匿名限流、可能被墙）。两者失败模式完全不同，
+   绑在一起会让「清单到了但计数没到」时也整块不渲染。
+
+   三条防线，任一条不满足就保持 hidden：
+     1. sessionStorage 缓存 5 分钟 —— 反复刷新不烧配额
+     2. 只认 200 + 数组 —— 403 限流、404 改名都当失败
+     3. 解析不出数字就当失败 —— 不显示 NaN 或 0 */
+const COUNT_KEY = 'idme_dl_count';
+const COUNT_TTL = 5 * 60 * 1000;
+const RELEASES_API = 'https://api.github.com/repos/moxiuren/idme-attendance-app/releases';
+
+function showCount(n) {
+  const box = document.getElementById('dlCount');
+  const num = document.getElementById('dlCountNum');
+  if (!box || !num || !Number.isFinite(n) || n <= 0) return;
+  // 千位分隔 —— 马来文/中文都用逗号分组，够用
+  num.textContent = n.toLocaleString('en-US');
+  box.hidden = false;
+}
+
+function readCountCache() {
+  try {
+    const raw = sessionStorage.getItem(COUNT_KEY);
+    if (!raw) return null;
+    const { n, t } = JSON.parse(raw);
+    if (Date.now() - t > COUNT_TTL) return null;
+    return typeof n === 'number' ? n : null;
+  } catch { return null; }
+}
+
+function writeCountCache(n) {
+  try { sessionStorage.setItem(COUNT_KEY, JSON.stringify({ n, t: Date.now() })); }
+  catch { /* 隐私模式 / 配额满，忽略 */ }
+}
+
+const cachedCount = readCountCache();
+if (cachedCount !== null) {
+  showCount(cachedCount);
+} else {
+  fetch(RELEASES_API, { headers: { Accept: 'application/vnd.github+json' } })
+    .then(r => (r.ok ? r.json() : Promise.reject(new Error('HTTP ' + r.status))))
+    .then(list => {
+      if (!Array.isArray(list)) throw new Error('响应不是数组');
+      // 只累加 .apk 附件。将来若上传源码包或校验文件，不会把它们算进去。
+      const n = list.reduce((sum, rel) =>
+        sum + (rel.assets || [])
+          .filter(a => /\.apk$/i.test(a.name || ''))
+          .reduce((s, a) => s + (a.download_count || 0), 0), 0);
+      if (!Number.isFinite(n) || n <= 0) throw new Error('计数为 0');
+      writeCountCache(n);
+      showCount(n);
+    })
+    // 静默失败 —— 控制台留一行便于排查，页面上什么都不显示
+    .catch(e => console.warn('[dlCount] 未显示下载数：', e.message));
+}
 
 function apply(code) {
   const dict = I18N[code];

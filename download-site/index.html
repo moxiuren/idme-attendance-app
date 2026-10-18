@@ -101,6 +101,15 @@
         </a>
         <a class="btn-ghost" href="#install" data-i18n="install">Cara Pemasangan</a>
         <p class="hero-fine" data-i18n="dlNote">Perlu Android 7.0 ke atas · Benarkan pemasangan daripada sumber tidak diketahui</p>
+
+        <!-- 累计下载数。数据源是 GitHub Release 的 download_count（只统计 .apk 附件）。
+             默认 hidden —— 拉取失败、限流、离线时整行不出现，绝不显示 0 或占位符。
+             放首屏是刻意的：社会证明只有贴着下载按钮才有用，塞进文件信息卡没人看。 -->
+        <p class="dl-count" id="dlCount" hidden>
+          <span data-i18n="dlCountPre">Telah dimuat turun</span>
+          <strong id="dlCountNum">0</strong>
+          <span data-i18n="dlCountSuf">kali</span>
+        </p>
       </div>
     </div>
   </div>
