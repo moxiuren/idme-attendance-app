@@ -26,8 +26,26 @@ const I18N = {
 
     navInfo: 'Maklumat Fail',
     navInstall: 'Pemasangan',
+    navIos: 'iPhone',
     navFeatures: 'Ciri-ciri',
     navFaq: 'Soalan Lazim',
+
+    iosTitle: 'Pengguna iPhone / iPad',
+    iosSub: 'Tanpa pasang App — cukup satu penanda buku.',
+    iosLead: 'Di iPhone, Chrome, Edge dan Firefox semuanya tidak menyokong sambungan pelayar, jadi pemasangan pemalam memang tidak boleh. Penyelesaiannya: simpan satu skrip sebagai penanda buku Safari. Buka halaman kehadiran, tekan penanda buku itu, dan panel akan muncul di atas halaman rasmi.',
+    iosBtn: 'Tambah Penanda Buku',
+    iosBtnSub: 'Tekan lama untuk salin, atau ikut langkah di bawah',
+    iosCopy: 'Salin kod penanda buku',
+    iosCopied: 'Kod disalin',
+    ios1t: 'Buka halaman kehadiran dahulu',
+    ios1b: 'Log masuk idMe dalam Safari, pergi ke Kehadiran → Tab Guru, pastikan senarai murid kelihatan.',
+    ios2t: 'Simpan halaman ini sebagai penanda buku',
+    ios2b: 'Tekan butang Kongsi di bawah Safari → "Tambah Penanda Buku" → Simpan. Namakan ia, contohnya "Kehadiran".',
+    ios3t: 'Tukar alamat penanda buku kepada skrip',
+    ios3b: 'Tekan butang salin di atas, kemudian buka Penanda Buku, edit penanda buku tadi, dan ganti seluruh alamat dengan skrip itu.',
+    ios4t: 'Tekan penanda buku di halaman kehadiran',
+    ios4b: 'Kembali ke halaman kehadiran, tekan bar alamat → taip satu huruf dahulu → pilih "Kehadiran" dalam cadangan. Panel akan muncul.',
+    iosNote: 'Setiap kali ditekan, versi terkini diambil secara automatik — tidak perlu pasang semula. Halaman rasmi kekal seperti biasa selepas panel ditutup.',
 
     infoTitle: 'Maklumat Fail',
     fVersion: 'Versi',
@@ -97,8 +115,26 @@ const I18N = {
 
     navInfo: '文件信息',
     navInstall: '安装',
+    navIos: 'iPhone',
     navFeatures: '功能',
     navFaq: '常见问题',
+
+    iosTitle: 'iPhone / iPad 用户',
+    iosSub: '不用装 App，加一个书签就行。',
+    iosLead: '在 iPhone 上，Chrome、Edge、Firefox 都不支持浏览器扩展，所以「装个插件」这条路走不通。可行的做法是把一段脚本存成 Safari 书签：打开点名页面，点一下书签，面板就会在官方页面上弹出来。',
+    iosBtn: '加入书签（一键）',
+    iosBtnSub: '长按复制，或按下面的步骤操作',
+    iosCopy: '复制书签代码',
+    iosCopied: '代码已复制',
+    ios1t: '先打开点名页面',
+    ios1b: '在 Safari 里登录 idMe，进入 Kehadiran → Tab Guru，确认能看到学生名单。',
+    ios2t: '把这个页面加入书签',
+    ios2b: '点 Safari 底部的分享按钮 →「添加书签」→ 保存。名字随意，例如「点名」。',
+    ios3t: '把书签地址改成脚本',
+    ios3b: '点上面的复制按钮，再到「书签」里编辑刚存的书签，把地址整段替换掉。',
+    ios4t: '在点名页面点书签',
+    ios4b: '回到点名页面，点地址栏 → 先随便输入一个字 → 在建议里选「点名」。面板就会弹出。',
+    iosNote: '每次点书签都会自动拉最新版本，不用重新安装。面板关掉后官方页面保持原样。',
 
     infoTitle: '文件信息',
     fVersion: '版本',
@@ -295,6 +331,11 @@ function apply(code) {
     copyBtn.textContent = dict.copy;
     copyBtn.classList.remove('done');
   }
+  const bmCopyBtn = document.getElementById('bmCopy');
+  if (bmCopyBtn) {
+    bmCopyBtn.textContent = dict.iosCopy;
+    bmCopyBtn.classList.remove('done');
+  }
   try { localStorage.setItem(STORE_KEY, code); } catch { /* 隐私模式忽略 */ }
 
   // 更新说明要跟着语言走。apply 可能早于清单到达（首屏），
@@ -335,6 +376,70 @@ if (copyBtn && sha) {
       copyBtn.classList.remove('done');
     }, 1800);
   });
+}
+
+/* ══════════════ 书签脚本（iPhone / iPad） ══════════════
+   为什么不直接把 javascript: 串写进 href：
+   它含单引号、括号、逗号，手写 HTML 转义极易出错，而且浏览器在
+   某些情况下会把它当普通链接处理。这里由 JS 生成并写入，只有一份真值。
+
+   为什么带 ?v=Date.now()：
+   脚本托管在 GitHub Pages，缓存策略不可控。加时间戳保证每次点书签
+   都拿到最新版本，改脚本不用通知任何人重新安装。 */
+const BM_URL = 'https://moxiuren.github.io/idme-attendance-app/bm.js';
+const BM_CODE =
+  "javascript:(function(){var s=document.createElement('script');" +
+  "s.src='" + BM_URL + "?v='+Date.now();" +
+  "s.onerror=function(){alert('脚本加载失败，请检查网络后重试。');};" +
+  "document.body.appendChild(s);})()";
+
+const bmLink = document.getElementById('bmLink');
+const bmCopy = document.getElementById('bmCopy');
+
+if (bmLink) {
+  // 在 Safari 里点这个链接不会执行（iOS 忽略 javascript: 的 href），
+  // 所以它只是个「可长按复制」的载体；桌面浏览器点了会尝试执行并失败，
+  // 因此统一改成复制行为，避免用户困惑。
+  bmLink.addEventListener('click', (e) => {
+    e.preventDefault();
+    copyBookmark();
+  });
+}
+
+async function copyBookmark() {
+  let ok = false;
+  try {
+    await navigator.clipboard.writeText(BM_CODE);
+    ok = true;
+  } catch {
+    // 退回 execCommand，兼容 http:// 与旧版 Safari
+    try {
+      const ta = document.createElement('textarea');
+      ta.value = BM_CODE;
+      ta.setAttribute('readonly', '');
+      ta.style.position = 'fixed';
+      ta.style.top = '-9999px';
+      document.body.appendChild(ta);
+      ta.select();
+      ta.setSelectionRange(0, BM_CODE.length);
+      ok = document.execCommand('copy');
+      document.body.removeChild(ta);
+    } catch { /* 放弃，下面给出手动提示 */ }
+  }
+  if (bmCopy) {
+    const dict = I18N[current] || I18N.ms;
+    bmCopy.textContent = ok ? dict.iosCopied : dict.iosCopy;
+    bmCopy.classList.toggle('done', ok);
+    setTimeout(() => {
+      const d = I18N[current] || I18N.ms;
+      bmCopy.textContent = d.iosCopy;
+      bmCopy.classList.remove('done');
+    }, 2000);
+  }
+}
+
+if (bmCopy) {
+  bmCopy.addEventListener('click', copyBookmark);
 }
 
 /* 首次访问按浏览器语言猜一次；之后一律听用户自己的选择。
