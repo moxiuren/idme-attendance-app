@@ -307,38 +307,10 @@ main > :last-child { margin-bottom: 72px; }
 /* 更新说明：来自 version.json 的 notes，没有就整行隐藏 */
 .notes { white-space: pre-line; font-weight: 500 !important; font-size: 14.5px !important; }
 
-/* ── iOS 书签方案 ──
-   这张卡是个「卡里套卡」的容器：外层浅紫描边给出与下方功能区的视觉分隔，
-   内层 .step 仍是原来的白便签，不换皮。
-   注意不能设 overflow: hidden —— .step-no 靠负 top 溢出卡片顶边，
-   一旦裁切，编号圆会被切掉上半。 */
-.ios-card {
-  margin-top: 22px;
-  background: linear-gradient(180deg, #fbf8ff 0%, var(--surface) 78%);
-  border: 1.5px solid var(--lilac-edge);
-  border-radius: var(--r);
-  box-shadow: var(--sh);
-  padding: 24px 26px 26px;
-}
-.ios-lead {
-  font-size: 14.5px; line-height: 1.68; color: var(--ink-soft);
-  max-width: 62ch;
-}
-.ios-actions {
-  display: flex; flex-wrap: wrap; align-items: center; gap: 12px;
-  margin-top: 20px;
-}
-/* 卡内按钮与卡同色系，避免两套马卡龙打架 */
-.ios-card .btn-dl {
-  background: var(--lilac); border-color: var(--lilac-edge); color: var(--lilac-ink);
-}
-.ios-card .btn-ghost {
-  min-height: 60px; padding: 0 22px;
-  border-color: var(--lilac-edge);
-}
-.ios-card .btn-ghost.done {
-  background: var(--mint); border-color: var(--mint-edge); color: var(--mint-ink);
-}
+/* ── iOS 书签方案 —— 暂时下线 ──
+   #ios 区块已从 index.html 撤除，页面只保留 Android 主线，
+   对应的 .ios-card / .ios-lead / .ios-actions / .dev-badge 等规则一并删除，
+   不留死代码。恢复时从提交 bc91c01 取回这一段的样式即可。 */
 
 /* 嵌在卡内：收紧行距。编号圆的 3px 描边仍是 --paper（#fdfcf9），
    与本卡的渐变顶（#fbf8ff）色差不到 2，无需覆盖 —— 多写一条反而更难维护。 */
@@ -480,17 +452,6 @@ main > :last-child { margin-bottom: 72px; }
   .info-grid { grid-template-columns: 1fr; gap: 0; }
   .steps, .feats { grid-template-columns: 1fr; }
   .sec-title { font-size: 21px; }
-  .ios-card { padding: 20px 16px 22px; border-radius: var(--r-sm); }
-  .ios-lead { font-size: 14px; }
-  .ios-actions { flex-direction: column; align-items: stretch; gap: 10px; }
-  .ios-card .btn-dl, .ios-card .btn-ghost { width: 100%; justify-content: center; }
-  /* 窄屏下主副文案并排会把「Tambah Penanda Buku」挤成三行 ——
-     改回纵向堆叠，两行文案各自独占一行，按钮高度可控。 */
-  .ios-card .btn-dl { flex-direction: column; padding: 12px 18px; }
-  .ios-card .btn-dl-main { font-size: 16.5px; }
-  .ios-card .btn-dl-sub { font-size: 12px; }
-  .ios-card .btn-ghost { min-height: 50px; }
-  .steps-tight { gap: 26px; }
   .endcard { flex-direction: column; align-items: stretch; }
   .endcard .btn-dl { width: 100%; }
 }

@@ -54,7 +54,6 @@
     <nav class="nav" aria-label="Seksyen">
       <a href="#info"     data-i18n="navInfo">Maklumat Fail</a>
       <a href="#install"  data-i18n="navInstall">Pemasangan</a>
-      <a href="#ios"      data-i18n="navIos">iPhone</a>
       <a href="#features" data-i18n="navFeatures">Ciri-ciri</a>
       <a href="#faq"      data-i18n="navFaq">Soalan Lazim</a>
     </nav>
@@ -176,60 +175,12 @@
     </ol>
   </section>
 
-  <!-- ══════════════ iPhone / iPad：书签方案 ══════════════
-       iOS 上 Chrome / Edge / Firefox 都不支持扩展（Apple 强制 WebKit），
-       所以「装个浏览器插件」这条路在 iPhone 上根本走不通。
-       唯一零安装的路径是 Safari 书签 + javascript: 脚本。
-       ★ 面板本身是注入到 moeispel 页面里的全屏覆盖层，不是独立 App。 -->
-  <section class="sec" id="ios">
-    <h2 class="sec-title" data-i18n="iosTitle">iPhone / iPad 用户</h2>
-    <p class="sec-sub" data-i18n="iosSub">不用装 App，加一个书签即可。</p>
-
-    <div class="ios-card">
-      <p class="ios-lead" data-i18n="iosLead">
-        在 iPhone 上，Chrome、Edge、Firefox 都不支持浏览器扩展，所以无法安装插件。
-        这里给出 Safari 书签方案：把一段脚本存成书签，在点名页面点一下，
-        就会在官方页面上弹出操作面板。
-      </p>
-
-      <div class="ios-actions">
-        <a class="btn-dl btn-dl-sm" id="bmLink" href="#" role="button"
-           data-goatcounter-click="bm-install"
-           data-goatcounter-title="书签脚本">
-          <span class="btn-dl-main" data-i18n="iosBtn">加入书签（一键）</span>
-          <span class="btn-dl-sub" data-i18n="iosBtnSub">长按复制，或点开后按提示操作</span>
-        </a>
-        <button type="button" class="btn-ghost" id="bmCopy" data-i18n="iosCopy">复制书签代码</button>
-      </div>
-
-      <ol class="steps steps-tight">
-        <li class="step">
-          <span class="step-no">1</span>
-          <h3 data-i18n="ios1t">先打开点名页面</h3>
-          <p data-i18n="ios1b">在 Safari 里登录 idMe，进入 Kehadiran → Tab Guru 页面，确认能看到学生名单。</p>
-        </li>
-        <li class="step">
-          <span class="step-no">2</span>
-          <h3 data-i18n="ios2t">把这个页面加入书签</h3>
-          <p data-i18n="ios2b">点 Safari 底部的分享按钮 →「添加书签」→ 保存。名字随便起，例如「点名」。</p>
-        </li>
-        <li class="step">
-          <span class="step-no">3</span>
-          <h3 data-i18n="ios3t">把书签地址改成脚本</h3>
-          <p data-i18n="ios3b">点下方按钮复制脚本，再到「书签」里编辑刚存的书签，把地址整段替换掉。</p>
-        </li>
-        <li class="step">
-          <span class="step-no">4</span>
-          <h3 data-i18n="ios4t">在点名页面点书签</h3>
-          <p data-i18n="ios4b">回到点名页面，点地址栏 → 先随便输入一个字 → 在出现的建议里选「点名」。面板就会弹出。</p>
-        </li>
-      </ol>
-
-      <p class="note" data-i18n="iosNote">
-        每次点书签都会自动拉取最新版本，不需要重新安装。面板关掉后官方页面保持原样。
-      </p>
-    </div>
-  </section>
+  <!-- ══════════════ iPhone / iPad 书签方案 —— 暂时下线 ══════════════
+       功能尚未补齐（缺日期导航、批量、PDPR、班级切换），先整段从页面上撤掉，
+       页面只保留 Android 主线，保持清爽。
+       bm.js 与 tests/bookmarklet/ 原样留在仓库里，补齐后再把本节放回来。
+       届时需要一并恢复：导航里的 #ios 链接、app.js 的 I18N ios* 文案、
+       styles.css 的 .ios-card / .dev-badge 规则。 -->
 
   <!-- ══════════════ 功能亮点 ══════════════ -->
   <section class="sec" id="features">

@@ -154,9 +154,40 @@
     var el = document.querySelector('input[name="_token"]');
     return el ? el.value : '';
   }
+
+  // 班级控件在官方页面上有两种形态：
+  //   · 单班级账号 —— hidden input[name="txtNamakelas"]
+  //   · 多班级账号 —— select#txtNamakelas（option 即班级列表）
+  // 用 id 选择器优先，回落到 name，两条都匹配不到才算解析失败。
+  function classEl() {
+    return document.querySelector('select#txtNamakelas') ||
+           document.querySelector('#txtNamakelas') ||
+           document.querySelector('[name="txtNamakelas"]');
+  }
+
   function readClassId() {
-    var el = document.querySelector('[name="txtNamakelas"]');
-    return el ? el.value : '';
+    var el = classEl();
+    return el ? String(el.value || '') : '';
+  }
+
+  /** 读班级列表。单班级账号返回一项（名字取控件文本或页面标题），
+   *  多班级账号返回全部 option。返回空数组表示解析不到。 */
+  function readClasses() {
+    var el = classEl();
+    if (!el) return [];
+    if (el.tagName === 'SELECT') {
+      var out = [];
+      var opts = el.querySelectorAll('option');
+      for (var i = 0; i < opts.length; i++) {
+        var v = String(opts[i].value || '').trim();
+        var n = String(opts[i].textContent || '').replace(/\s+/g, ' ').trim();
+        if (v && n && !/pilih/i.test(n)) out.push({ id: v, name: n });
+      }
+      return out;
+    }
+    // hidden input：只有一个值，名字从页面正文里捞不到就留空由调用方兜底
+    var v1 = String(el.value || '').trim();
+    return v1 ? [{ id: v1, name: '' }] : [];
   }
   function readDate() {
     var el = document.getElementById('tkh_HH');
@@ -169,6 +200,43 @@
     var d = new Date();
     return ('0' + d.getDate()).slice(-2) + '/' +
            ('0' + (d.getMonth() + 1)).slice(-2) + '/' + d.getFullYear();
+  }
+
+  // ------------------------------------------------------------------
+  // 日期工具（DD/MM/YYYY 与 Date 互转）
+  // 官方日期格式固定 DD/MM/YYYY，不用 toLocaleDateString —— 它受系统区域影响，
+  // 同一个手机换个语言就会变成 MM/DD 或带月份名，提交给服务端直接错。
+  // ------------------------------------------------------------------
+  function pad2(n) { return ('0' + n).slice(-2); }
+
+  function dmyToDate(s) {
+    var m = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(String(s || ''));
+    if (!m) return null;
+    // 用本地时间构造，不用 new Date('2026-10-19') —— 后者按 UTC 解析，
+    // 在东八区会退到前一天。
+    return new Date(Number(m[3]), Number(m[2]) - 1, Number(m[1]));
+  }
+
+  function dateToDmy(d) {
+    return pad2(d.getDate()) + '/' + pad2(d.getMonth() + 1) + '/' + d.getFullYear();
+  }
+
+  function shiftDmy(s, delta) {
+    var d = dmyToDate(s);
+    if (!d) return s;
+    d.setDate(d.getDate() + delta);
+    return dateToDmy(d);
+  }
+
+  function todayDmy() { return dateToDmy(new Date()); }
+
+  /** 是否还能往后翻（官方日期选择器 maxDate = 今天，未来日期本就不该到达） */
+  function canGoNext(s) {
+    var d = dmyToDate(s);
+    if (!d) return true;
+    var t = new Date();
+    t.setHours(0, 0, 0, 0);
+    return d.getTime() < t.getTime();
   }
 
   // ------------------------------------------------------------------
@@ -254,12 +322,16 @@
   // ------------------------------------------------------------------
   var S = {
     date: '', classId: '',
+    classes: [],              // [{id, name}]，多班级账号可切换
     students: [], bilhadir: 0, biltidakhadir: 0,
     statushari: 0, verified: false,
     baseline: {},
     loading: false, error: '', toast: '',
     filter: '',
-    sheet: null   // { studentId } 或 null
+    sheet: null,              // { studentId } 或 null
+    selectMode: false,        // 批量选择模式
+    selected: {},             // { id: true }，批量模式下的勾选
+    showClass: false          // 班级切换面板
   };
 
   // 三态：present / excused / absent
@@ -341,6 +413,24 @@
     '#idme-bm .bm-sub{font-size:12px;opacity:.8;margin-left:auto;margin-right:4px;}',
     '#idme-bm .bm-close{width:32px;height:32px;border-radius:8px;background:rgba(255,255,255,.16);',
     'display:flex;align-items:center;justify-content:center;font-size:18px;line-height:1;}',
+    '#idme-bm .bm-class{margin-left:auto;margin-right:4px;padding:5px 9px;border-radius:7px;',
+    'background:rgba(255,255,255,.16);font-size:12px;font-weight:600;max-width:44%;',
+    'overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}',
+
+    /* 日期栏 */
+    '#idme-bm .bm-datebar{flex:0 0 auto;display:flex;align-items:center;gap:6px;',
+    'padding:7px 10px;background:#fff;border-bottom:1px solid #e3e8ee;}',
+    '#idme-bm .bm-arrow{flex:0 0 auto;width:38px;height:38px;border-radius:9px;background:#f2f5f8;',
+    'color:#0f4c81;font-size:19px;font-weight:600;display:flex;align-items:center;',
+    'justify-content:center;line-height:1;}',
+    '#idme-bm .bm-arrow:disabled{color:#c3ccd5;background:#f7f9fb;}',
+    '#idme-bm .bm-datemain{flex:1 1 auto;min-width:0;display:flex;align-items:center;',
+    'justify-content:center;gap:7px;padding:8px 6px;border-radius:9px;background:#f7f9fb;}',
+    '#idme-bm .bm-datetext{font-size:14.5px;font-weight:600;font-variant-numeric:tabular-nums;}',
+    '#idme-bm .bm-tag{font-size:10.5px;padding:2px 6px;border-radius:5px;font-weight:700;',
+    'white-space:nowrap;}',
+    '#idme-bm .bm-tag.ok{background:#e6f5ec;color:#1a7f4b;}',
+    '#idme-bm .bm-tag.wait{background:#fff4dd;color:#8a6100;}',
 
     /* 计数条 */
     '#idme-bm .bm-stats{flex:0 0 auto;display:flex;background:#fff;border-bottom:1px solid #e3e8ee;}',
@@ -360,6 +450,16 @@
     '#idme-bm .bm-search:focus{border-color:#0f4c81;background:#fff;}',
     '#idme-bm .bm-mini{padding:8px 12px;border-radius:9px;font-size:13px;background:#eef3f8;',
     'color:#0f4c81;font-weight:600;white-space:nowrap;}',
+    '#idme-bm .bm-mini.pdpr{background:#e8f3ec;color:#1a7f4b;}',
+
+    /* 批量选择条 */
+    '#idme-bm .bm-selbar{flex:0 0 auto;display:flex;align-items:center;gap:6px;',
+    'padding:8px 10px;background:#eef3f8;border-bottom:1px solid #dfe7ee;}',
+    '#idme-bm .bm-selcount{font-size:12.5px;font-weight:700;color:#0f4c81;',
+    'white-space:nowrap;margin-right:2px;}',
+    '#idme-bm .bm-selbtn{flex:1;padding:7px 4px;border-radius:8px;background:#fff;',
+    'font-size:12.5px;font-weight:600;color:#41505e;text-align:center;}',
+    '#idme-bm .bm-selbtn.on{background:#0f4c81;color:#fff;}',
 
     /* 名单 */
     '#idme-bm .bm-list{flex:1 1 auto;overflow-y:auto;-webkit-overflow-scrolling:touch;',
@@ -386,6 +486,13 @@
     '#idme-bm .bm-row.e .bm-toggle{background:#e6f0fa;color:#1f6fb2;}',
     '#idme-bm .bm-whybtn{flex:0 0 auto;padding:6px 9px;border-radius:7px;background:#f2f5f8;',
     'color:#41505e;font-size:12px;font-weight:600;}',
+    /* 批量模式：整行可点勾选，右侧「原因」与状态圆让位给勾选框 */
+    '#idme-bm .bm-row.selmode .bm-whybtn,',
+    '#idme-bm .bm-row.selmode .bm-toggle{display:none;}',
+    '#idme-bm .bm-check{flex:0 0 auto;width:26px;height:26px;border-radius:7px;',
+    'border:1.5px solid #c3ccd5;background:#fff;display:flex;align-items:center;',
+    'justify-content:center;font-size:15px;font-weight:700;color:#fff;}',
+    '#idme-bm .bm-check.on{background:#0f4c81;border-color:#0f4c81;}',
 
     /* 底栏 */
     '#idme-bm .bm-foot{flex:0 0 auto;background:#fff;border-top:1px solid #e3e8ee;',
@@ -396,6 +503,9 @@
     '#idme-bm .bm-primary:disabled{background:#b8c4cf;}',
     '#idme-bm .bm-ghost{padding:12px 14px;border-radius:11px;background:#eef3f8;',
     'color:#0f4c81;font-size:14px;font-weight:600;}',
+    '#idme-bm .bm-ghost.cancel{background:#f2f5f8;color:#68737d;}',
+    '#idme-bm .bm-ghost.present{background:#e8f3ec;color:#1a7f4b;}',
+    '#idme-bm .bm-ghost.absent{background:#fdecea;color:#c0392b;}',
 
     /* 提示 */
     '#idme-bm .bm-note{padding:8px 12px;font-size:12px;color:#68737d;background:#f9fafb;',
@@ -421,7 +531,14 @@
     '#idme-bm .bm-sebablist{overflow-y:auto;-webkit-overflow-scrolling:touch;flex:1 1 auto;}',
     '#idme-bm .bm-sebab{padding:13px 14px;border-bottom:1px solid #f4f6f8;font-size:14.5px;}',
     '#idme-bm .bm-sebab small{display:block;font-size:11px;color:#9aa5b1;margin-top:2px;}',
-    '#idme-bm .bm-sebab.on{background:#eef3f8;}'
+    '#idme-bm .bm-sebab.on{background:#eef3f8;}',
+
+    /* 班级切换面板：复用假因面板的遮罩与底部卡片 */
+    '#idme-bm .bm-classitem{padding:14px;border-bottom:1px solid #f4f6f8;font-size:14.5px;',
+    'display:flex;align-items:center;gap:9px;}',
+    '#idme-bm .bm-classitem.on{background:#eef3f8;font-weight:650;color:#0f4c81;}',
+    '#idme-bm .bm-classitem .bm-dot{flex:0 0 auto;width:16px;text-align:center;',
+    'color:#0f4c81;font-weight:700;}'
   ].join('');
 
   // ------------------------------------------------------------------
@@ -452,6 +569,8 @@
     var c = counts();
     var rows = filtered();
 
+    var selMode = S.selectMode;
+
     var rowsHtml = rows.map(function (s) {
       var cls = s.state === 'present' ? 'p' : (s.state === 'excused' ? 'e' : 'a');
       var mark = s.state === 'present' ? '&#10003;' : (s.state === 'excused' ? '&#9679;' : '&#10005;');
@@ -464,8 +583,14 @@
       } else {
         why = '未选原因';
       }
-      return '<div class="bm-row ' + cls + '" data-sid="' + esc(s.id) + '">' +
-        '<div class="bm-num">' + s.index + '</div>' +
+      // 批量模式下左侧编号让位给勾选框，整行点按即切换勾选
+      var lead = selMode
+        ? '<div class="bm-check' + (S.selected[s.id] ? ' on' : '') + '">' +
+            (S.selected[s.id] ? '&#10003;' : '') + '</div>'
+        : '<div class="bm-num">' + s.index + '</div>';
+      return '<div class="bm-row ' + cls + (selMode ? ' selmode' : '') +
+          '" data-sid="' + esc(s.id) + '">' +
+        lead +
         '<div class="bm-main" data-act="toggle">' +
           '<div class="bm-name">' + esc(s.name) + '</div>' +
           (why ? '<div class="bm-why">' + why + '</div>' : '') +
@@ -488,34 +613,111 @@
       note = '<div class="bm-note">' + esc(S.toast) + '</div>';
     }
 
-    root.innerHTML =
+    // 出席率：口径与官方一致 —— 出席 = 勾选出席 + 官方算出席的请假
+    var rate = S.students.length
+      ? Math.round((c.p + c.e) / S.students.length * 100)
+      : 0;
+
+    var classLabel = '';
+    for (var ci = 0; ci < S.classes.length; ci++) {
+      if (S.classes[ci].id === S.classId) { classLabel = S.classes[ci].name; break; }
+    }
+
+    var headHtml =
       '<div class="bm-head">' +
         '<div class="bm-title">idMe 极速点名</div>' +
-        '<div class="bm-sub">' + esc(S.date) + '</div>' +
+        (S.classes.length > 1
+          ? '<button class="bm-class" data-act="classsheet">' +
+              esc(classLabel || '选择班级') + ' &#9662;</button>'
+          : (classLabel ? '<div class="bm-class">' + esc(classLabel) + '</div>' : '')) +
         '<button class="bm-close" data-act="close">&#10005;</button>' +
-      '</div>' +
+      '</div>';
+
+    // 日期栏：前后一天 + 回今天。徽章只在「有出勤可录入的当天」显示，
+    // 非上课日（statushari≠0）本就没有可确认的东西，挂个「待确认」是误导。
+    var dateHtml =
+      '<div class="bm-datebar">' +
+        '<button class="bm-arrow" data-act="prevday"' +
+          (S.loading ? ' disabled' : '') + '>&#8249;</button>' +
+        '<button class="bm-datemain" data-act="today">' +
+          '<span class="bm-datetext">' + esc(S.date) + '</span>' +
+          (S.statushari === 0
+            ? '<span class="bm-tag ' + (S.verified ? 'ok' : 'wait') + '">' +
+                (S.verified ? '已归档' : '待确认') + '</span>'
+            : '') +
+        '</button>' +
+        '<button class="bm-arrow" data-act="nextday"' +
+          (S.loading || !canGoNext(S.date) ? ' disabled' : '') + '>&#8250;</button>' +
+      '</div>';
+
+    var selHtml = selMode
+      ? '<div class="bm-selbar">' +
+          '<span class="bm-selcount">已选 ' + Object.keys(S.selected).length + '</span>' +
+          '<button class="bm-selbtn" data-act="selall">全选</button>' +
+          '<button class="bm-selbtn" data-act="selinv">反选</button>' +
+          '<button class="bm-selbtn" data-act="selnone">清空</button>' +
+        '</div>'
+      : '';
+
+    var footHtml = selMode
+      ? '<div class="bm-foot">' +
+          '<button class="bm-ghost cancel" data-act="selexit">取消</button>' +
+          '<button class="bm-ghost present" data-act="selpresent">标出席</button>' +
+          '<button class="bm-ghost absent" data-act="selabsent">标缺席</button>' +
+        '</div>'
+      : '<div class="bm-foot">' +
+          '<button class="bm-ghost" data-act="reload">刷新</button>' +
+          '<button class="bm-ghost" data-act="batch"' +
+            (S.loading || !S.students.length ? ' disabled' : '') + '>批量</button>' +
+          '<button class="bm-primary" data-act="submit"' +
+            (S.loading || S.error || S.statushari !== 0 ? ' disabled' : '') + '>' +
+            '提交（' + (c.e + c.a) + ' 人非出席）</button>' +
+        '</div>';
+
+    root.innerHTML =
+      headHtml +
+      dateHtml +
       (note || '') +
       '<div class="bm-stats">' +
         '<div class="bm-stat p"><b>' + c.p + '</b><span>出席</span></div>' +
         '<div class="bm-stat e"><b>' + c.e + '</b><span>请假(算出席)</span></div>' +
         '<div class="bm-stat a"><b>' + c.a + '</b><span>缺席</span></div>' +
-        '<div class="bm-stat"><b>' + S.students.length + '</b><span>全班</span></div>' +
+        '<div class="bm-stat"><b>' + rate + '%</b><span>出席率</span></div>' +
       '</div>' +
+      selHtml +
       '<div class="bm-tools">' +
         '<input class="bm-search" placeholder="搜索姓名" value="' + esc(S.filter) + '">' +
         '<button class="bm-mini" data-act="allpresent">全班出席</button>' +
+        '<button class="bm-mini pdpr" data-act="pdpr">PDPR</button>' +
       '</div>' +
       '<div class="bm-list">' +
         (S.loading ? '<div class="bm-empty">正在读取名单…</div>' :
          rows.length ? rowsHtml : '<div class="bm-empty">没有匹配的学生</div>') +
       '</div>' +
-      '<div class="bm-foot">' +
-        '<button class="bm-ghost" data-act="reload">刷新</button>' +
-        '<button class="bm-primary" data-act="submit"' +
-          (S.loading || S.error || S.statushari !== 0 ? ' disabled' : '') + '>' +
-          '提交（' + (c.e + c.a) + ' 人非出席）</button>' +
+      footHtml +
+      (S.sheet ? sheetHtml() : '') +
+      (S.showClass ? classSheetHtml() : '');
+  }
+
+  // 班级切换面板（仅多班级账号出现）
+  function classSheetHtml() {
+    var items = S.classes.map(function (c) {
+      var on = c.id === S.classId;
+      return '<div class="bm-classitem' + (on ? ' on' : '') +
+        '" data-act="pickclass" data-cid="' + esc(c.id) + '">' +
+        '<span class="bm-dot">' + (on ? '&#10003;' : '') + '</span>' +
+        '<span>' + esc(c.name || c.id) + '</span>' +
+      '</div>';
+    }).join('');
+    return '<div class="bm-sheet" data-act="sheetbg">' +
+      '<div class="bm-sheetbox">' +
+        '<div class="bm-sheethead">' +
+          '<b>选择班级</b>' +
+          '<button class="bm-mini" data-act="closeclass">关闭</button>' +
+        '</div>' +
+        '<div class="bm-sebablist">' + items + '</div>' +
       '</div>' +
-      (S.sheet ? sheetHtml() : '');
+    '</div>';
   }
 
   // 搜索：事件委托到 root，避免 render 重建后监听器丢失
@@ -618,6 +820,116 @@
     render();
   }
 
+  // ------------------------------------------------------------------
+  // 日期 / 班级切换
+  // ------------------------------------------------------------------
+  // 官方页面把当前日期放在 hidden input#tkh_HH，同时用 #tarikhpilihan 显示。
+  // 两处都写，官方界面才会跟着走；写不到也不影响提交，因为 POST 用的是 S.date。
+  function setPageDate(dmy) {
+    var el = document.getElementById('tkh_HH');
+    if (el) el.value = dmy;
+    var span = document.getElementById('tarikhpilihan');
+    if (span) span.textContent = dmy;
+  }
+
+  function resetDraftState() {
+    S.selectMode = false;
+    S.selected = {};
+    S.sheet = null;
+    S.showClass = false;
+    S.filter = '';
+    S.toast = '';
+  }
+
+  function gotoDate(dmy) {
+    if (!dmy || dmy === S.date) return;
+    setPageDate(dmy);
+    resetDraftState();
+    S.date = dmy;
+    load(false, dmy);
+  }
+
+  function switchClass(cid) {
+    var el = classEl();
+    if (el) el.value = cid;
+    resetDraftState();
+    S.classId = cid;
+    load(false);
+  }
+
+  // ------------------------------------------------------------------
+  // 一键 PDPR
+  // ------------------------------------------------------------------
+  // PDPR = 居家学习日。官方口径里这类请假算出席（kategori 'A'），
+  // 所以整班标成 excused 后，服务端 bilhadir 仍然等于全班人数 —— 这是对的。
+  function applyAllPdpr() {
+    if (!S.students.length) return;
+    var d = DICT.byCode[PDPR_SEBAB];
+    var name = d ? d.name : 'PDPR';
+    var n = counts().p;
+    if (n > 0 && !confirm('把全班 ' + S.students.length + ' 人标记为「' + name + '」？\n' +
+                          '（当前有 ' + n + ' 人标记为出席，会被覆盖）')) return;
+    S.students.forEach(function (s) {
+      s.state = 'excused';
+      s.sebabCode = PDPR_SEBAB;
+      s.kategori = d ? d.kat : 'A';
+      s.sebabName = name;
+    });
+    S.toast = '已全部标记为 ' + name + '（尚未提交）';
+    render();
+  }
+
+  // ------------------------------------------------------------------
+  // 批量选择
+  // ------------------------------------------------------------------
+  function enterSelect() {
+    if (!S.students.length) return;
+    S.selectMode = true;
+    S.selected = {};
+    S.sheet = null;
+    S.showClass = false;
+    render();
+  }
+
+  function exitSelect() {
+    S.selectMode = false;
+    S.selected = {};
+    render();
+  }
+
+  function toggleSel(id) {
+    if (!id) return;
+    if (S.selected[id]) delete S.selected[id];
+    else S.selected[id] = true;
+    render();
+  }
+
+  /** kind = 'present' | 'absent'。标出席清空假因；标缺席保留已选假因。 */
+  function batchMark(kind) {
+    var ids = Object.keys(S.selected);
+    if (!ids.length) {
+      S.toast = '请先勾选学生';
+      render();
+      return;
+    }
+    ids.forEach(function (id) {
+      var s = findStudent(id);
+      if (!s) return;
+      if (kind === 'present') {
+        s.state = 'present';
+        s.sebabCode = ''; s.kategori = ''; s.sebabName = '';
+      } else {
+        s.state = 'absent';
+        // 已选过请假原因的，保留原因但降级为真缺席（kategori 保留，状态由 kategori 决定）
+        if (s.sebabCode) s.state = isExcused(s.kategori) ? 'excused' : 'absent';
+      }
+    });
+    S.selectMode = false;
+    S.selected = {};
+    S.toast = '已' + (kind === 'present' ? '标记出席 ' : '标记缺席 ') + ids.length + ' 人（尚未提交）';
+    render();
+  }
+
   function collectRecords() {
     return S.students
       .filter(function (s) { return s.state !== 'present'; })
@@ -676,10 +988,15 @@
       });
   }
 
-  function load(silent) {
+  function load(silent, dateOverride) {
     if (!silent) { S.loading = true; S.error = ''; render(); }
     S.classId = readClassId();
-    S.date = readDate();
+    // dateOverride 优先：切换日期时官方 hidden input 可能被页面脚本回写，
+    // 直接吃自己算出来的值更可靠。
+    S.date = dateOverride || readDate();
+    // 每次 load 都重读班级列表 —— 多班级账号切班级后 option 集合会变
+    var cs = readClasses();
+    if (cs.length) S.classes = cs;
 
     if (!S.classId) {
       S.loading = false;
@@ -724,6 +1041,27 @@
 
     if (act === 'close') { destroy(); return; }
     if (act === 'reload') { load(false); return; }
+
+    // ---- 日期导航 ----
+    if (act === 'prevday') { gotoDate(shiftDmy(S.date, -1)); return; }
+    if (act === 'nextday') {
+      if (!canGoNext(S.date)) return;
+      gotoDate(shiftDmy(S.date, 1));
+      return;
+    }
+    if (act === 'today') { gotoDate(todayDmy()); return; }
+
+    // ---- 班级切换 ----
+    if (act === 'classsheet') { S.showClass = true; render(); return; }
+    if (act === 'closeclass') { S.showClass = false; render(); return; }
+    if (act === 'pickclass') {
+      var cid = t.getAttribute('data-cid');
+      S.showClass = false;
+      if (cid && cid !== S.classId) switchClass(cid);
+      return;
+    }
+
+    // ---- 一键操作 ----
     if (act === 'allpresent') {
       if (!S.students.length) return;
       var n = counts().e + counts().a;
@@ -736,11 +1074,30 @@
       render();
       return;
     }
+    if (act === 'pdpr') { applyAllPdpr(); return; }
     if (act === 'submit') { doSubmit(); return; }
+
+    // ---- 批量模式 ----
+    if (act === 'batch') { enterSelect(); return; }
+    if (act === 'selexit') { exitSelect(); return; }
+    if (act === 'selall') {
+      S.students.forEach(function (s) { S.selected[s.id] = true; });
+      render(); return;
+    }
+    if (act === 'selnone') { S.selected = {}; render(); return; }
+    if (act === 'selinv') {
+      var next = {};
+      S.students.forEach(function (s) { if (!S.selected[s.id]) next[s.id] = true; });
+      S.selected = next; render(); return;
+    }
+    if (act === 'selpresent') { batchMark('present'); return; }
+    if (act === 'selabsent') { batchMark('absent'); return; }
 
     var row = t.closest ? t.closest('.bm-row') : null;
     if (act === 'toggle' || act === 'sebab') {
       var sid = row ? row.getAttribute('data-sid') : '';
+      // 批量模式下整行点按 = 切换勾选，不进入单人行操作
+      if (S.selectMode) { toggleSel(sid); return; }
       if (act === 'toggle') { toggleStudent(sid); return; }
       var st = findStudent(sid);
       if (st) {
@@ -757,15 +1114,18 @@
     }
     if (act === 'closesheet') { S.sheet = null; render(); return; }
     if (act === 'sheetbg' && t.classList.contains('bm-sheet')) {
-      S.sheet = null; render(); return;
+      S.sheet = null; S.showClass = false; render(); return;
     }
   }
 
+  // ESC 逐层退出：浮层 → 批量模式 → 关闭面板。
+  // 一次按到底会让人误触关掉整个面板，正在改的名单就白改了（草稿只在内存里）。
   function onKey(e) {
-    if (e.key === 'Escape') {
-      if (S.sheet) { S.sheet = null; render(); }
-      else destroy();
-    }
+    if (e.key !== 'Escape') return;
+    if (S.sheet) { S.sheet = null; render(); return; }
+    if (S.showClass) { S.showClass = false; render(); return; }
+    if (S.selectMode) { exitSelect(); return; }
+    destroy();
   }
 
   // ------------------------------------------------------------------
@@ -781,6 +1141,14 @@
     var st = document.getElementById('idme-bm-style');
     if (st && st.parentNode) st.parentNode.removeChild(st);
     root = null;
+    // 状态一并清空。否则重新点书签时 mount() 复用同一个 S 对象，
+    // 上一次的批量勾选与浮层会原样冒出来。
+    S.selectMode = false;
+    S.selected = {};
+    S.sheet = null;
+    S.showClass = false;
+    S.filter = '';
+    S.toast = '';
     window[NS] = null;
   }
 
