@@ -1,16 +1,15 @@
 /* 底部抽屉：假因分类 chips / 原因列表 / 月份选择 */
 
-/* ==================== 底部抽屉 ==================== */
+/* ==================== 底部抽屉（墨水屏极简） ==================== */
 .sheet-mask {
   position: fixed;
   inset: 0;
-  background: rgba(60, 50, 32, .30);
+  background: rgba(9, 9, 11, .42);
   display: flex;
   align-items: flex-end;
   justify-content: center;
   z-index: 100;
 }
-/* 抽屉像从本子下方抽出来的一页纸 */
 .sheet {
   width: 100%;
   max-width: 560px;
@@ -18,28 +17,19 @@
   display: flex;
   flex-direction: column;
   background: var(--paper);
-  border-top: 2.8px solid var(--ink);
-  /* 左右两个角**不相等**：22px / 30px。
-     原值是 26px 26px —— 完全对称，一眼就能看出是照着设计规范填的。
-     抽屉是一页从本子里抽出来的纸，抽出时被手带了一下，边角不会分毫不差。
-     差异取 8px：够看出不对称，又不至于歪到像渲染错误。 */
-  border-radius: 22px 30px 0 0;
+  border-top: 2px solid var(--ink);
+  border-radius: 12px 12px 0 0;
   padding: 12px 16px calc(16px + env(safe-area-inset-bottom));
-  /* 阴影由「模糊光晕」改为「实色厚度」，与全应用统一。
-     旧值 0 -10px 26px 是柔和投影 —— 那是「浮起的卡片」的语言（Material 式），
-     而本应用的隐喻是「纸叠纸」，纸压纸只会留下一条硬边，不会散成一圈雾。
-     3px 而非 10px：抽屉高 86vh，硬边太高会变成一条厚重的黑带。 */
-  box-shadow: 0 -3px 0 rgba(60, 50, 32, .18);
 }
 .sheet-sm { max-height: 70vh; }
 /* 拖拽把手 */
 .sheet::before {
   content: '';
   display: block;
-  width: 44px;
-  height: 5px;
+  width: 36px;
+  height: 4px;
   margin: 0 auto 12px;
-  border-radius: 3px;
+  border-radius: 2px;
   background: var(--line);
   flex-shrink: 0;
 }
@@ -50,15 +40,12 @@
   gap: 10px;
   margin-bottom: 12px;
 }
-.sheet-title { font-size: 19px; font-weight: 700; color: var(--ink); }
+.sheet-title { font-size: 18px; font-weight: 800; color: var(--ink); }
 .sheet-head-acts { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
 .sheet-sub   { font-size: 13px; color: var(--text-dim); margin-top: 2px; }
 .sheet-foot { padding-top: 12px; }
 .sheet-foot-col { display: flex; flex-direction: column; gap: 8px; }
 
-/* 抽屉关闭：纯图标（打叉）。
-   原为「Tutup」文字按钮，但 .icon-btn 是透明底、文字看起来像裸标签；
-   换成图标后头部更干净，且保留 44px 触控面积与无障碍名称。 */
 .sheet-close {
   flex-shrink: 0;
   display: inline-flex;
@@ -67,28 +54,25 @@
   width: var(--tap-min);
   height: var(--tap-min);
   padding: 0;
-  color: var(--text-dim);
+  color: var(--ink);
   background: #fff;
-  border: 2.2px solid var(--line);
-  border-radius: var(--r-pill);
-  box-shadow: var(--mk-sm);
+  border: 1.5px solid var(--line);
+  border-radius: var(--r-s);
   font-family: inherit;
   cursor: pointer;
 }
-.sheet-close:active { background: var(--blue-fill); color: var(--blue-ink); box-shadow: none; }
+.sheet-close:active { background: var(--paper-2); }
 
-/* ==================== 确认对话框 ====================
-   居中卡片，与底部抽屉刻意区分：
-   抽屉 = 「选东西」（点遮罩即关）；对话框 = 「做决定」（必须明确选一边）。 */
+/* ==================== 确认对话框 ==================== */
 .dialog-mask {
   position: fixed;
   inset: 0;
-  background: rgba(60, 50, 32, .38);
+  background: rgba(9, 9, 11, .48);
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 24px 18px;
-  z-index: 200;            /* 高于抽屉：可从抽屉之上弹出 */
+  z-index: 200;
 }
 .dialog {
   width: 100%;
@@ -96,14 +80,31 @@
   max-height: 80vh;
   overflow-y: auto;
   background: var(--paper);
-  border: 2.8px solid var(--ink);
-  /* 用纸张循环里的 p2（四个角各不相同），不再用统一的 --r-sk。
-     对话框是全应用最「重」的元素（2.8px 黑边 + 最大阴影），
-     这里若还套一个规整值，整屏最显眼的东西反而最像模板。
-     阴影方向改为 3px/2px —— 与其它纸张一样，压向某一侧而非正下方。 */
-  border-radius: var(--r-p2);
-  box-shadow: 3px 2px 0 rgba(46, 42, 36, .22);
+  border: 2px solid var(--ink);
+  border-radius: var(--r);
   padding: 18px 18px 16px;
+}
+
+/* ==================== 抽屉 / 确认框进出过渡（150~200ms 干脆减速） ==================== */
+.sheet-enter-active, .sheet-leave-active { transition: opacity 160ms ease; }
+.sheet-enter-active .sheet, .sheet-leave-active .sheet {
+  transition: transform 200ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.sheet-enter-from, .sheet-leave-to { opacity: 0; }
+.sheet-enter-from .sheet, .sheet-leave-to .sheet { transform: translateY(100%); }
+
+.dialog-enter-active, .dialog-leave-active { transition: opacity 150ms ease; }
+.dialog-enter-active .dialog, .dialog-leave-active .dialog {
+  transition: transform 160ms cubic-bezier(0.22, 1, 0.36, 1), opacity 150ms ease;
+}
+.dialog-enter-from, .dialog-leave-to { opacity: 0; }
+.dialog-enter-from .dialog, .dialog-leave-to .dialog { transform: scale(0.95); opacity: 0; }
+
+@media (prefers-reduced-motion: reduce) {
+  .sheet-enter-active, .sheet-leave-active,
+  .sheet-enter-active .sheet, .sheet-leave-active .sheet,
+  .dialog-enter-active, .dialog-leave-active,
+  .dialog-enter-active .dialog, .dialog-leave-active .dialog { transition: none; }
 }
 .dialog-head {
   display: flex;

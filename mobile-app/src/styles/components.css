@@ -1,71 +1,65 @@
 /* 通用组件：按钮 / 顶栏 / 日期栏 / 统计卡片 */
 
-/* ==================== 按钮 ==================== */
+/* ==================== 按钮（墨水屏高对比极速风） ==================== */
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
   min-height: var(--tap);
-  padding: 0 18px;
-  font-size: 16px;
-  font-weight: 600;
+  padding: 0 16px;
+  font-size: 15px;
+  font-weight: 700;
   font-family: inherit;
-  color: var(--text);
+  color: var(--ink);
   background: var(--surface);
-  border: 2.2px solid var(--line);
-  border-radius: var(--r-sk-sm);
-  box-shadow: var(--mk-sm);
+  border: 1.5px solid var(--ink);
+  border-radius: var(--r-s);
   cursor: pointer;
-  transition: transform .06s ease, filter .15s ease;
+  transition: opacity .1s ease, background .1s ease;
 }
-.btn:active:not(:disabled) { transform: translate(1px, 1px) scale(.985); box-shadow: none; }
-.btn:disabled { opacity: .45; cursor: not-allowed; box-shadow: none; }
+.btn:active:not(:disabled) { opacity: .78; }
+.btn:disabled { opacity: .38; cursor: not-allowed; }
 
-/* 主操作：荧光笔蓝 */
+/* 主操作（全班到齐 / 登录）：纯黑底纯白字 */
 .btn-primary {
-  background: var(--blue-fill);
-  border-color: var(--blue-edge);
-  color: var(--blue-ink);
+  background: var(--ink);
+  border-color: var(--ink);
+  color: #ffffff;
 }
-.btn-primary:active:not(:disabled) { background: #bdd5f2; }
+.btn-primary:active:not(:disabled) { background: #27272a; }
 
-/* 提交归档：便签黄 —— 周围都是白纸，黄色自然成为视觉焦点 */
+/* 有缺席/请假时的提交归档：高对比深朱红底白字，与全到纯黑区分防误触 */
 .btn-amber {
   background: var(--sticky);
   border-color: var(--sticky-edge);
   color: var(--sticky-ink);
 }
-.btn-amber:active:not(:disabled) { background: #fbe489; }
+.btn-amber:active:not(:disabled) { background: #991b1b; }
 
 .btn-ghost {
   background: transparent;
   border-color: var(--line);
   color: var(--text-dim);
-  box-shadow: none;
 }
 
-/* 破坏性操作（确认对话框里）：红底红字，与主操作的蓝/琥珀明确区分 */
 .btn-danger {
   background: var(--red-bg);
   border-color: var(--red-edge);
   color: var(--red);
 }
-.btn-danger:active:not(:disabled) { background: #f6d5d2; }
+.btn-danger:active:not(:disabled) { background: #fee2e2; }
 
-/* 一键全班 PDPR —— 与「算出席」同一语义色（琥珀）。
-   用白底 + 琥珀描边而非实心：提交按钮在有待办时也是琥珀系（便签黄），
-   两个实心块并排会互相抢焦点。 */
+/* 一键全班 PDPR：纯白底 + 1.5px 黑框，克制不抢主按钮 */
 .btn-pdpr {
-  background: #fff;
-  border-color: var(--amber-edge);
-  color: var(--amber);
-  box-shadow: var(--mk-sm);
+  background: #ffffff;
+  border-color: var(--ink);
+  color: var(--ink);
 }
-.btn-pdpr:active:not(:disabled) { background: var(--amber-bg); box-shadow: none; }
+.btn-pdpr:active:not(:disabled) { background: var(--paper-2); }
 
-/* 大按钮：15.5px 而非 17px —— 马来文提交文案在 17px 下会挤成 4 行 */
-.btn-lg { min-height: 60px; font-size: 15.5px; line-height: 1.3; }
+/* 大按钮 */
+.btn-lg { min-height: 52px; font-size: 15px; line-height: 1.25; }
 
 /* 提交按钮两段式：主行 = 官方动词（Kemaskini），副行 = 明细。
    明细最长到「0 tidak hadir · 31 PDPR/cuti」，与动词同行会折成 3 行撑破按钮，
@@ -123,95 +117,107 @@
   pointer-events: none;
 }
 
-/* ==================== 主框架 ==================== */
+/* ==================== 主框架（墨水屏纯白高对比） ==================== */
 .app {
   display: flex;
   flex-direction: column;
   height: 100%;
   padding-top: env(safe-area-inset-top);
-  /* 纸张颗粒：只在最外层画一次，内部滚动不重复绘制。
-     旧版三层透明度 .09 / .07 / .06 **精确递减** —— 这个递减本身
-     就是「配出来的」痕迹，真实纸纤维不会按等差数列分布。
-     改为 .11 / .055 / .08：深浅交替、互不成比例。
-     尺寸也避开 37/41 这类相邻质数（看着太讲究），改用 43×37、59×53、31×47。 */
   background-color: var(--paper);
-  background-image:
-    radial-gradient(circle at 18% 22%, rgba(160, 145, 115, .11) 0 1px, transparent 1px),
-    radial-gradient(circle at 62% 71%, rgba(160, 145, 115, .055) 0 1px, transparent 1px),
-    radial-gradient(circle at 84% 38%, rgba(160, 145, 115, .08) 0 1px, transparent 1px);
-  background-size: 43px 37px, 59px 53px, 31px 47px;
 }
 
-/* 顶栏：像笔记本页眉，下方一条手绘横线 */
+/* 顶栏：2px 纯黑底线，极简班级标题 + 右侧动作 + 2px 精密加载条 */
 .topbar {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  padding: 8px 12px;
-  background: transparent;
-  border-bottom: 2.5px solid var(--ink);
+  padding: 6px 12px;
+  background: var(--paper);
+  border-bottom: 2px solid var(--ink);
+}
+.topbar-progress {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -2px;
+  height: 2px;
+  overflow: hidden;
+  background: var(--line);
+  pointer-events: none;
+}
+.topbar-progress::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  width: 38%;
+  background: var(--ink);
+  animation: topbar-slide 1.05s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+@keyframes topbar-slide {
+  0%   { transform: translateX(-110%); }
+  100% { transform: translateX(360%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .topbar-progress::after { animation: none; width: 100%; }
 }
 .topbar-class {
   display: flex;
   align-items: center;
   gap: 6px;
   min-height: var(--tap-min);
-  padding: 0 12px;
-  /* 17px：360dp 屏上「TAHUN SATU B」正好放得下，18px 会被截断（真机实测） */
+  padding: 0 8px 0 4px;
   font-size: 17px;
-  font-weight: 700;
-  color: var(--blue-ink);
-  background: var(--blue-fill);
-  border: 2.2px solid var(--blue-edge);
-  border-radius: var(--r-sk-sm);
-  box-shadow: var(--mk-blue);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  background: transparent;
+  border: none;
+  border-radius: var(--r-s);
   font-family: inherit;
   cursor: pointer;
-  max-width: 42vw;
+  max-width: 52vw;
 }
-.topbar-class:disabled { box-shadow: none; }
+.topbar-class:active:not(:disabled) { background: var(--paper-2); }
 .topbar-class-name {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 .caret { font-size: 12px; opacity: .7; }
-/* 右侧动作组不参与压缩，保证三个按钮始终单行 */
 .topbar-right { display: flex; align-items: center; gap: 2px; flex-shrink: 0; }
 .conn {
-  width: 10px; height: 10px;
+  width: 8px; height: 8px;
   border-radius: 50%;
   margin-right: 6px;
   flex-shrink: 0;
 }
-.conn-on  { background: var(--green); box-shadow: 0 0 0 3px rgba(63, 107, 44, .18); }
-.conn-off { background: #a99f8c; }
+.conn-on  { background: var(--ink); }
+.conn-off { background: #a1a1aa; }
 
-/* 日期栏
-   注：官方状态徽章原文较长（MENUNGGU PENGESAHAN 19 字符），
-   360dp 屏上必须收紧字号与箭头宽度才放得下。箭头 46px 仍 ≥ 44px 触控下限。 */
+/* 日期栏：紧凑单行 + 1px 底线 */
 .datebar {
   display: flex;
-  align-items: stretch;
+  align-items: center;
   gap: 8px;
-  padding: 10px 12px;
-  background: transparent;
+  padding: 6px 12px;
+  background: var(--paper);
+  border-bottom: 1px solid var(--line);
 }
 .date-arrow {
-  width: 46px;
-  min-height: 50px;
-  font-size: 24px;
-  color: var(--blue-ink);
-  background: var(--blue-fill);
-  border: 2.2px solid var(--blue-edge);
-  border-radius: var(--r-sk-sm);
-  box-shadow: var(--mk-blue);
+  width: 44px;
+  min-height: var(--tap-min);
+  font-size: 22px;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--r-s);
   font-family: inherit;
   cursor: pointer;
 }
-.date-arrow:active:not(:disabled) { transform: translate(1px, 1px); box-shadow: none; }
-.date-arrow:disabled { opacity: .4; box-shadow: none; }
+.date-arrow:active:not(:disabled) { background: var(--paper-2); }
+.date-arrow:disabled { opacity: .35; }
 .date-main {
   flex: 1;
   min-width: 0;
@@ -219,80 +225,68 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 3px;
-  min-height: 50px;
-  background: var(--surface);
-  border: 2.2px solid var(--line);
-  border-radius: var(--r-sk-sm);
-  box-shadow: var(--mk-sm);
+  gap: 2px;
+  min-height: var(--tap-min);
+  background: transparent;
+  border: none;
+  border-radius: var(--r-s);
   font-family: inherit;
   cursor: pointer;
 }
-.date-text { font-size: 15px; font-weight: 700; color: var(--ink); white-space: nowrap; }
+.date-main:active { background: var(--paper-2); }
+.date-text { font-size: 14.5px; font-weight: 700; color: var(--ink); white-space: nowrap; }
 .date-tag {
   font-size: 10px;
   font-weight: 700;
-  /* 去掉 letter-spacing: -0.1px —— 10px 字号下负字距几乎不可见，
-     纯粹是「显得专业」的装饰。徽章本来就要挤进窄格，负字距也不会让它更省地方。 */
-  padding: 1.5px 8px;
-  border-radius: var(--r-pill);
-  border: 1.5px solid;
+  letter-spacing: 0.03em;
+  padding: 1px 7px;
+  border-radius: 3px;
+  border: 1px solid var(--ink);
   white-space: nowrap;
 }
-.tag-green { background: var(--green-bg); border-color: var(--green-edge); color: var(--green); }
-.tag-amber { background: var(--amber-bg); border-color: var(--amber-edge); color: var(--amber); }
+.tag-green {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: #ffffff;
+  animation: stamp-in 180ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.tag-amber { background: #ffffff; border-color: var(--ink); color: var(--ink); }
+@keyframes stamp-in {
+  0%   { opacity: 0.4; transform: scale(0.9); }
+  100% { opacity: 1; transform: scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tag-green { animation: none; }
+}
 
-/* 统计：四格，手绘分隔。马来文标签（Tidak Hadir）比中文长，故收紧间距与字号 */
+/* 统计：紧凑横条，四格平分，1px 极细分割线，把最大视口留给学生名单 */
 .stats {
   display: grid;
-  /* minmax(0,1fr) 而非 1fr：1fr 的最小宽度等于内容最小宽度，
-     「96.8%」这类不可折行内容会把四列撑宽、把整块布局顶出屏幕。
-     minmax(0,…) 允许列缩到 0，溢出改由 .stat 的容器查询字号 + 折行兜底控制。 */
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 6px;
-  padding: 0 10px;
+  background: var(--paper-2);
+  border-bottom: 1px solid var(--line);
+  padding: 0;
 }
 .stat {
   min-width: 0;
-  /* 卡片自身作为容器查询容器：字号按卡片真实宽度自适应。
-     360dp 下卡片内容宽只有 64~68px，而「100%」在 24px 时需要约 71px、
-     20px 时需要约 59px —— 固定字号在宽屏上仍会冲出卡片
-     （真机实测：固定 24px 时百分比溢出卡片并顶到屏幕边缘被截断）。
-     注：百分比满 100 已改为不带小数（见 utils.formatPercent），
-     最宽的取值是「96.8%」这类 5 字符。 */
   container-type: inline-size;
-  background: var(--surface);
-  border: 2.2px solid var(--line);
-  border-radius: var(--r-sk-sm);
-  box-shadow: var(--mk-sm);
-  padding: 9px 3px;
+  background: transparent;
+  border: none;
+  border-right: 1px solid var(--line);
+  border-radius: 0;
+  padding: 7px 3px;
   text-align: center;
-  /* 数字与标签作为**一组**在卡片内垂直居中。
-     原先靠 padding 上下各 9px + margin-top 硬凑：数字 line-height 1.1 的
-     字形上下留白本就不对称，凑出来的重心会偏，小屏上肉眼可见「没居中」。
-     flex 居中后，字号怎么变，整组的垂直重心都钉在卡片中线上。 */
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
 }
-/* 四格统计：只换**厚度方向**，不换圆角。
-   为什么这里不套 --r-p1..4 的圆角循环：统计条是横向比对数字的地方，
-   四格的边框与基线必须齐平，否则教师扫「31 / 28 / 2 / 90.3%」时
-   视线会被参差的边角拽走。可读性优先于「不规则感」。
-   而厚度方向各朝一边，就足够说明「这是四张纸，不是一张表格的四格」——
-   差异只在阴影的 x/y 偏移与透明度上，不触及数字本身。 */
-.stat:nth-child(4n+1) { box-shadow: var(--mk-p1); }
-.stat:nth-child(4n+2) { box-shadow: var(--mk-p2); }
-.stat:nth-child(4n+3) { box-shadow: var(--mk-p3); }
-.stat:nth-child(4n+4) { box-shadow: var(--mk-p4); }
-/* 兜底 18px：容器查询不可用的老 WebView 下也能容纳 5 字符的百分比（如「96.8%」） */
+.stat:last-child { border-right: none; }
 .stat-num {
   font-size: 18px;
   font-weight: 800;
   line-height: 1.1;
   color: var(--ink);
-  /* 数字理论上不可折行，但仍留一条兜底，宁可折行也不出格 */
   overflow-wrap: anywhere;
 }
 @supports (container-type: inline-size) {

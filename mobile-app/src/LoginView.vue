@@ -36,6 +36,9 @@
         {{ busy ? t('loggingIn') : t('login') }}
       </button>
 
+      <div v-if="busy && progressPct > 0" class="boot-bar" aria-hidden="true">
+        <span class="boot-bar-fill" :style="{ width: progressPct + '%' }"></span>
+      </div>
       <p v-if="progress" class="boot-progress">{{ progress }}</p>
       <p class="boot-note">{{ t('credNote') }}</p>
 
@@ -61,6 +64,7 @@ defineProps({
   busy: { type: Boolean, default: false },
   error: { type: String, default: '' },
   progress: { type: String, default: '' },
+  progressPct: { type: Number, default: 0 },
 });
 defineEmits(['update:ic', 'update:password', 'submit']);
 

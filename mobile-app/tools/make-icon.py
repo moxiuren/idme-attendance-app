@@ -38,23 +38,21 @@ APP = os.path.dirname(HERE)
 RES = os.path.join(APP, "android", "app", "src", "main", "res")
 DOCS = os.path.abspath(os.path.join(APP, os.pardir, "docs"))
 
-# ── 配色：与 src/styles/base.css 的令牌逐字一致 ──────────────────
-PAPER = (252, 248, 236, 255)   # --paper
-INK = (46, 42, 36, 255)        # --ink
-BLUE = (43, 78, 120, 255)      # --blue-ink（界面主色）
-GREEN = (63, 107, 44, 255)     # --green（出席）
-SHADOW = (46, 42, 36, 46)      # --mk 的实色偏移投影
+# ── 配色：与 src/styles/base.css（方案 C 墨水屏高对比）逐字一致 ──
+PAPER = (255, 255, 255, 255)   # --paper 纯白卡片
+INK = (9, 9, 11, 255)          # --ink 纯黑底与主墨
+BLUE = (9, 9, 11, 255)         # 自适应背景色（兼容原常量名，与 ic_launcher_background.xml 一致）
+LINE_DIM = (212, 212, 216, 255)  # 静默出席行（#D4D4D8）
+RED = (220, 38, 38, 255)       # --red-edge 朱红异常高亮（#DC2626）
 
 # ── 几何：以「可见区 1000×1000 单位」为坐标空间 ──────────────────
 UNIT = 1000.0
 MASTER = 2048                  # 可见区的渲染分辨率（再降采样到各档）
 FG_SCALE = 0.875               # 自适应前景在 108dp 图层里的缩放（见 make_foreground）
 ROUND_SCALE = 0.84             # 圆形图标要额外收边（见 make_round）
-TILT = -4.0                    # 手账里的纸片从不摆正
-CARD_W, CARD_H, CARD_R = 640.0, 720.0, 66.0
-ROWS = [(-250.0, 480.0), (-160.0, 452.0), (-70.0, 468.0)]   # (y, 长度)
-CHECK = ((-165.0, 130.0), (-30.0, 255.0), (215.0, 20.0))    # 起 / 折 / 终
-ROW_W, CHECK_W, OUTLINE_W = 50.0, 92.0, 15.0
+CARD_W, CARD_H, CARD_R = 620.0, 680.0, 56.0
+CHECK = ((-165.0, 128.0), (-36.0, 248.0), (196.0, 16.0))   # 利落几何对勾：起 / 折 / 终
+CHECK_W = 86.0
 
 # (目录后缀, 传统图标 px, 自适应前景 px)
 DENSITIES = [
@@ -135,36 +133,49 @@ def _qbez(p0, p1, p2, n=26):
 # ══════════════════════════════════════════════════════════════
 
 def render_content(px=MASTER):
-    """画在透明层上。可见区 px×px 居中，卡片按 TILT 倾斜。"""
+    """方案 C（墨水屏高对比极速风）前景：
+    正置纯白利落点名卡 + 两条极简名单线（第二条左侧点亮朱红异常指示条）+ 纯黑几何粗对勾。
+    彻底去除歪斜、手抖边框与偏移阴影，确保 48px 桌面上依然锐利清晰。
+    """
     u = px / UNIT
     c = px / 2.0
     layer = Image.new("RGBA", (px, px), (0, 0, 0, 0))
     d = ImageDraw.Draw(layer)
 
     w, h, r = CARD_W * u, CARD_H * u, CARD_R * u
+    x0, y0, x1, y1 = c - w / 2, c - h / 2, c + w / 2, c + h / 2
 
-    body = _wobble(_rrect(c, c, w, h, r), 2.4 * u, seed=17)
+    # 1. 纯白锐利几何卡本体
+    d.rounded_rectangle([x0, y0, x1, y1], radius=r, fill=PAPER)
 
-    # 实色偏移投影 —— 先画，后被卡片本体盖住大半，只在右下露出一条边
-    d.polygon([(x + 17 * u, y + 23 * u) for x, y in body], fill=SHADOW)
+    # 2. 上半区两条名单横条（与 App 内部「正常隐身 + 朱红左色条异常高亮」呼应）
+    bar_x0 = c - 205 * u
+    bar_x1 = c + 205 * u
+    bar_h = 42 * u
+    bar_r = 12 * u
 
-    d.polygon(body, fill=PAPER)
-    _stroke(d, body + [body[0]], INK, OUTLINE_W * u, cap=False)
+    # 第 1 行：正常出席（浅灰退后）
+    y_row1 = c - 210 * u
+    d.rounded_rectangle([bar_x0, y_row1 - bar_h / 2, bar_x1, y_row1 + bar_h / 2],
+                        radius=bar_r, fill=LINE_DIM)
 
-    # 名单墨线：长度刻意各不相同，像随手画的三行。
-    # alpha 压到 100 而非实心：实心墨线在 48px 下会和卡片边框糊成一根黑条。
-    for i, (ry, rlen) in enumerate(ROWS):
-        x0, x1 = c - rlen * u / 2, c + rlen * u / 2
-        _stroke(d, [(x0, c + ry * u), (x1, c + ry * u)],
-                (46, 42, 36, 100), ROW_W * u)
+    # 第 2 行：朱红左指示块 + 中灰条（核心视觉记忆点）
+    y_row2 = c - 122 * u
+    red_w = 78 * u
+    d.rounded_rectangle([bar_x0, y_row2 - bar_h / 2, bar_x0 + red_w, y_row2 + bar_h / 2],
+                        radius=bar_r, fill=RED)
+    d.rounded_rectangle([bar_x0 + red_w + 26 * u, y_row2 - bar_h / 2, bar_x1 - 32 * u, y_row2 + bar_h / 2],
+                        radius=bar_r, fill=(161, 161, 170, 255))
 
-    # 绿勾：两笔贝塞尔，圆头，稍微压出卡片一点点弧度感
+    # 3. 精细横分割线
+    sep_y = c - 44 * u
+    d.rectangle([x0 + 52 * u, sep_y, x1 - 52 * u, sep_y + 10 * u], fill=(228, 228, 231, 255))
+
+    # 4. 下半区：纯黑利落几何对勾（代表极速核对归档）
     a, b, e = [(c + p[0] * u, c + p[1] * u) for p in CHECK]
-    left = _qbez(a, (a[0] + (b[0] - a[0]) * 0.55, a[1] + (b[1] - a[1]) * 0.42), b)
-    right = _qbez(b, (b[0] + (e[0] - b[0]) * 0.16, b[1] + (e[1] - b[1]) * 0.34), e)
-    _stroke(d, left + right[1:], GREEN, CHECK_W * u)
+    _stroke(d, [a, b, e], INK, CHECK_W * u, cap=True)
 
-    return layer.rotate(TILT, resample=Image.BICUBIC, center=(c, c))
+    return layer
 
 
 # ══════════════════════════════════════════════════════════════
@@ -419,7 +430,7 @@ def main():
         print(f"写入  mipmap-{dens}  {sq_px}×{sq_px} ×2  +  前景 {fg_px}×{fg_px}")
 
     print(f"完成  共 {written} 个 PNG")
-    print("提示  values/ic_launcher_background.xml 需与图标底色一致（#2B4E78）")
+    print("提示  values/ic_launcher_background.xml 需与图标底色一致（#09090B）")
 
 
 if __name__ == "__main__":

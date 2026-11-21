@@ -36,6 +36,8 @@ export const ERR_KEYS = {
   SESSION_LOST: 'errSessionLost',
   PARSE_ERROR: 'errParse',
   NETWORK: 'errNetwork',
+  WAF_BLOCKED: 'errWafBlocked',
+  SERVER_BUSY: 'errServerBusy',
 };
 
 /** 未登记错误码的兜底文案 key */

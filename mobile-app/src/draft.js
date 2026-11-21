@@ -119,3 +119,28 @@ export function applyDraft(students, draft) {
   const missing = Object.keys(saved).filter(id => !currentIds.has(id)).length;
   return { applied, missing, diff };
 }
+
+// ---------------------------------------------------------------- 首屏快照缓存（秒开）
+const HOME_CACHE_KEY = 'idme_home_cache_v1';
+const HOME_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
+
+export async function loadHomeCache() {
+  try {
+    const { value } = await Preferences.get({ key: HOME_CACHE_KEY });
+    if (!value) return null;
+    const snap = JSON.parse(value);
+    if (!snap || Date.now() - (snap.savedAt || 0) > HOME_CACHE_TTL_MS) return null;
+    return snap;
+  } catch { return null; }
+}
+
+export function saveHomeCache(payload) {
+  Preferences.set({
+    key: HOME_CACHE_KEY,
+    value: JSON.stringify({ ...payload, savedAt: Date.now() }),
+  }).catch(() => {});
+}
+
+export function clearHomeCache() {
+  Preferences.remove({ key: HOME_CACHE_KEY }).catch(() => {});
+}

@@ -32,12 +32,12 @@
         <span v-if="updateBadge" class="upd-dot" aria-hidden="true"></span>
       </button>
     </div>
+    <span v-if="busy" class="topbar-progress" aria-hidden="true"></span>
   </header>
 </template>
 
 <script setup>
-// 顶栏：班级入口 + 连接状态 + 报表 / 设置 / 退出批量。
-// 一键 PDPR 已移到吸底操作栏，顶栏因此只剩纯导航，不再挤字。
+// 顶栏：班级入口 + 连接状态 + 报表 / 设置 / 退出批量 + 2px 精密加载条。
 import { t } from './i18n.js';
 import Icon from './Icon.vue';
 
@@ -45,6 +45,7 @@ defineProps({
   className: { type: String, default: '' },
   classCount: { type: Number, default: 0 },
   online: { type: Boolean, default: false },
+  busy: { type: Boolean, default: false },
   selectMode: { type: Boolean, default: false },
   updateBadge: { type: Boolean, default: false },
 });

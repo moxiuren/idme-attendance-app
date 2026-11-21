@@ -1,5 +1,6 @@
 <template>
-  <div v-if="open" class="sheet-mask" @click.self="$emit('close')">
+  <Transition name="sheet">
+    <div v-if="open" class="sheet-mask" @click.self="$emit('close')">
     <div class="sheet sheet-report">
       <div class="sheet-head">
         <div class="sheet-title">{{ t('reportTitle') }}</div>
@@ -120,6 +121,7 @@
       </div>
     </div>
   </div>
+  </Transition>
 </template>
 
 <script setup>

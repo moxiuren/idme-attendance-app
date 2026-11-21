@@ -1,5 +1,6 @@
 <template>
-  <div v-if="open" class="sheet-mask" @click.self="onClose">
+  <Transition name="sheet">
+    <div v-if="open" class="sheet-mask" @click.self="onClose">
     <div class="sheet sheet-sm">
       <div class="sheet-head">
         <div>
@@ -97,6 +98,7 @@
       </div>
     </div>
   </div>
+  </Transition>
 </template>
 
 <script setup>

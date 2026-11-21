@@ -20,36 +20,36 @@ try:
 except (AttributeError, OSError):
     pass
 
-# ---------------- 当前设计令牌（与 styles/base.css 的 :root 保持一致） ----------------
+# ---------------- 当前设计令牌（与 styles/base.css 的 :root 保持一致：方案 C 墨水屏高对比） ----------------
 TOKENS = {
-    # 纸与墨
-    "paper":       "#fcf8ec",
-    "paper_2":     "#f6f0e0",
-    "line":        "#c6bda9",
+    # 墨水屏纯白与纯黑
+    "paper":       "#ffffff",
+    "paper_2":     "#f4f4f5",
+    "line":        "#e4e4e7",
     "surface":     "#ffffff",
-    "text":        "#2e2a24",
-    "text_dim":    "#6b6255",
-    # 荧光笔蓝
-    "blue_fill":   "#cfe1f7",
-    "blue_edge":   "#9cc0e8",
-    "primary":     "#2b4e78",
-    # 出席
-    "green":       "#3f6b2c",
-    "green_bg":    "#e4f0da",
-    "green_edge":  "#8fb878",
-    # 算出席（琥珀）
-    "amber":       "#9e5a00",
-    "amber_bg":    "#fdf0d8",
-    "amber_edge":  "#d98e1f",
-    # 缺席（红）
-    "red":         "#b03434",
-    "red_bg":      "#fbe4e2",
-    "red_edge":    "#d24b4b",
-    # 便签
-    "sticky":      "#fff0a8",
-    "sticky_ink":  "#6b5711",
+    "text":        "#09090b",
+    "text_dim":    "#52525b",
+    # 中性黑白系（兼容原 blue 令牌名）
+    "blue_fill":   "#f4f4f5",
+    "blue_edge":   "#09090b",
+    "primary":     "#09090b",
+    # 出席（克制静默）
+    "green":       "#166534",
+    "green_bg":    "#f4f4f5",
+    "green_edge":  "#d4d4d8",
+    # 算出席 / PDPR（琥珀）
+    "amber":       "#92400e",
+    "amber_bg":    "#fffbeb",
+    "amber_edge":  "#d97706",
+    # 缺席（高饱和朱红）
+    "red":         "#b91c1c",
+    "red_bg":      "#fef2f2",
+    "red_edge":    "#dc2626",
+    # 有异常时的主提交按钮（高对比朱红底白字）
+    "sticky":      "#b91c1c",
+    "sticky_ink":  "#ffffff",
     # 批量选中行
-    "picked":      "#f2f7fd",
+    "picked":      "#f4f4f5",
 }
 
 # (用途, 前景令牌, 背景令牌, 字号px, 是否粗体)

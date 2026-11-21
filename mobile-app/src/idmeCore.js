@@ -16,10 +16,27 @@ const PdfGenerator = registerPlugin('PdfGenerator');
 
 const IDME_ORIGIN = 'https://idme.moe.gov.my';
 const MOEIS_ORIGIN = 'https://moeispel.moe.gov.my';
-const REQUEST_TIMEOUT_MS = 20000;
-const MAX_RETRY = 2;
+const REQUEST_TIMEOUT_MS = 12000;
+const RESUME_TIMEOUT_MS = 10000;
+const MAX_RETRY = 1;
 /** 出勤类接口的 Accept：必须让 Laravel 判定为 JSON 请求，否则可能回 HTML */
 const AJAX_ACCEPT = 'application/json, text/javascript, */*; q=0.01';
+
+/**
+ * 识别 Imperva / Incapsula WAF 拦截或 JS 挑战页。
+ * 注意：官网正常页面底部也会挂载 `/_Incapsula_Resource?SWJIYLWA=...` 探针脚本，
+ * 绝不能只凭 `_Incapsula_Resource` 误判 —— 必须命中明确拦截文案，
+ * 或是「含 _Incapsula_Resource 且极短(<4KB)且无业务特征(_token/moeispel)」的纯挑战页。
+ */
+function isWafBlock(html) {
+  if (!html || typeof html !== 'string') return false;
+  if (/Incapsula incident ID|Request unsuccessful\./i.test(html)) return true;
+  if (/_Incapsula_Resource/i.test(html) && html.length < 4000
+      && !/name=["']_token["']|moeispel/i.test(html)) {
+    return true;
+  }
+  return false;
+}
 
 /** 从 HTML 中提取官方 alert 提示文本 */
 function extractAlert(html) {
@@ -84,12 +101,20 @@ class IdMeService {
     for (const item of list) {
       // 一个 Set-Cookie 头可能含多个 cookie，按 ,名字= 切分
       for (const p of String(item).split(/,(?=[A-Za-z0-9_-]+=)/)) {
-        const seg = p.trim().split(';')[0];
+        const parts = p.trim().split(';');
+        const seg = parts[0];
         const eq = seg.indexOf('=');
         if (eq > 0) {
           const k = seg.slice(0, eq).trim();
           const v = seg.slice(eq + 1).trim();
-          if (k && v) jar[k] = v;
+          if (k && v) {
+            const isShared = parts.slice(1).some(a => /domain\s*=\s*\.?moe\.gov\.my/i.test(a));
+            if (isShared) {
+              if (!this.cookies['.moe.gov.my']) this.cookies['.moe.gov.my'] = {};
+              this.cookies['.moe.gov.my'][k] = v;
+            }
+            jar[k] = v;
+          }
         }
       }
     }
@@ -108,24 +133,60 @@ class IdMeService {
     } catch { /* 非致命 */ }
   }
 
+  /** 清空内存与原生 Cookie，防止旧会话/WAF 残留引发双轨冲突与 419 */
+  async _clearCookies() {
+    this.cookies = {};
+    try {
+      if (Capacitor.isNativePlatform() && CapacitorCookies?.clearAllCookies) {
+        await CapacitorCookies.clearAllCookies();
+      }
+    } catch { /* 非致命 */ }
+  }
+
   cookieHeaderFor(url) {
-    const jar = this.cookies[originOf(url)] || {};
-    return Object.entries(jar).map(([k, v]) => `${k}=${v}`).join('; ');
+    const o = originOf(url);
+    const merged = {};
+    // 兼容 .moe.gov.my 跨子域 Cookie（如 Imperva WAF 与负载均衡粘性 Cookie）
+    if (o.endsWith('.moe.gov.my')) {
+      Object.assign(merged, this.cookies['.moe.gov.my'] || {});
+    }
+    Object.assign(merged, this.cookies[o] || {});
+    return Object.entries(merged).map(([k, v]) => `${k}=${v}`).join('; ');
+  }
+
+  /** 检查官方网关级异常（Imperva WAF 拦截 / 419 / 5xx） */
+  _checkGatewayError(resp) {
+    if (!resp) return;
+    const body = typeof resp.data === 'string' ? resp.data : '';
+    if (isWafBlock(body)) {
+      throw new IdMeError('触发官方安全防火墙拦截，请稍候片刻再试', 'WAF_BLOCKED', true);
+    }
+    if (resp.status === 419) {
+      throw new IdMeError('会话令牌已过期，请重试登录', 'SESSION_LOST', true);
+    }
+    if (resp.status >= 500) {
+      throw new IdMeError(`官方服务器暂时繁忙（HTTP ${resp.status}）`, 'SERVER_BUSY', true);
+    }
   }
 
   // --------------------------------------------------------------- Request
 
-  async request(method, url, data = null, extraHeaders = {}) {
+  async request(method, url, data = null, extraHeaders = {}, opts = {}) {
     const headers = {
       'User-Agent': 'Mozilla/5.0 (Linux; Android 13; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36',
       'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,application/json,*/*;q=0.8',
       'Accept-Language': 'ms,en-US;q=0.9,en;q=0.8,zh-CN;q=0.7,zh;q=0.6',
       ...extraHeaders,
     };
-    const cookieStr = this.cookieHeaderFor(url);
-    if (cookieStr) headers['Cookie'] = cookieStr;
+    // 原生端启用 CapacitorHttp 时由 Android CookieManager 自动收发 Cookie；
+    // 手动再拼 headers['Cookie'] 会导致同名 Cookie 重复发送并触发 419，故仅非原生端手动注入。
+    if (!Capacitor.isNativePlatform()) {
+      const cookieStr = this.cookieHeaderFor(url);
+      if (cookieStr) headers['Cookie'] = cookieStr;
+    }
 
-    const options = { url, headers, connectTimeout: REQUEST_TIMEOUT_MS, readTimeout: REQUEST_TIMEOUT_MS };
+    const timeout = opts.timeoutMs || REQUEST_TIMEOUT_MS;
+    const options = { url, headers, connectTimeout: timeout, readTimeout: timeout };
 
     if (method === 'POST') {
       if (typeof data === 'string') {
@@ -139,19 +200,21 @@ class IdMeService {
       }
     }
 
+    // 仅幂等 GET 默认重试；POST 不自动重试，避免消耗 CSRF token 后重发触发 419 误报密码错
+    const maxRetry = opts.retry ?? (method === 'GET' ? MAX_RETRY : 0);
     let lastErr;
-    for (let attempt = 0; attempt <= MAX_RETRY; attempt++) {
+    for (let attempt = 0; attempt <= maxRetry; attempt++) {
       try {
         const resp = method === 'POST'
           ? await CapacitorHttp.post(options)
           : await CapacitorHttp.get(options);
-        this.parseCookies(url, resp.headers);
-        await this.syncNativeCookies(url);
+        if (!Capacitor.isNativePlatform()) {
+          this.parseCookies(url, resp.headers);
+        }
         return resp;
       } catch (err) {
         lastErr = err;
-        // 仅对网络层失败重试；应用层错误不重试
-        if (attempt < MAX_RETRY) await sleep(400 * (attempt + 1));
+        if (attempt < maxRetry) await sleep(400 * (attempt + 1));
       }
     }
     throw new IdMeError(`网络请求失败：${lastErr?.message || lastErr}`, 'NETWORK', true);
@@ -194,22 +257,56 @@ class IdMeService {
   // ------------------------------------------------------------ Auth (4 步)
 
   /**
-   * 完整登录链路：CSRF → 验 IC → 密码 → SSO 直通 → 取出勤 token 与班级。
-   * @param {string} ic 身份证号
-   * @param {string} password 密码
-   * @param {(step:string, descKey:string)=>void} onProgress
-   *   第二个参数是 **i18n key**（如 'bootStep1'），不是成品文案。
-   *   服务层不持有界面语言，翻译由调用方（App.vue）用 t() 完成 ——
-   *   原先这里直接写中文，导致国文界面下登录进度仍显示中文。
+   * 冷启动会话复用探测（秒进机制）：
+   * 若原生 CookieManager 中的 MOEIS 会话尚未过期，直接一次 GET 拿到 token 与班级，
+   * 跳过 5 步串行 SSO 握手；任何异常静默返回 false，交由完整 login() 兜底。
+   */
+  async tryResumeSession(onProgress = () => {}) {
+    try {
+      onProgress('', 'bootResume');
+      const rTab = await this.request('GET', `${MOEIS_ORIGIN}/sahsiah/kehadiran/tabguru`, null, {
+        Referer: `${MOEIS_ORIGIN}/`,
+      }, { retry: 0, timeoutMs: RESUME_TIMEOUT_MS });
+      if (!rTab || rTab.status !== 200) return false;
+      const htmlTab = typeof rTab.data === 'string' ? rTab.data : '';
+      if (isWafBlock(htmlTab)) return false;
+      const token = this.extractToken(htmlTab);
+      if (!token) return false;
+      this._parseClasses(htmlTab);
+      if (!this.classes.length) return false;
+      this.moeisToken = token;
+      this._parseTeacherInfo(htmlTab);
+      this.isLoggedIn = true;
+      this.refreshSebab().catch(() => {});
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * 完整登录链路：清场 → CSRF → 验 IC → 密码 → SSO 直通 → 取出勤 token 与班级。
+   * 统一由 _loginLock 互斥保护，防止界面手动登录与后台会话自愈并发覆盖。
    */
   async login(ic, password, onProgress = () => {}) {
     if (!ic || !password) {
       throw new IdMeError('请先填写身份证号与密码', 'CREDENTIAL_MISSING');
     }
+    if (!this._loginLock) {
+      this._loginLock = this._doLogin(ic, password, onProgress).finally(() => {
+        this._loginLock = null;
+      });
+    }
+    return this._loginLock;
+  }
+
+  async _doLogin(ic, password, onProgress = () => {}) {
     this.isLoggedIn = false;
+    await this._clearCookies();
 
     onProgress('1/4', 'bootStep1');
     const r1 = await this.request('GET', `${IDME_ORIGIN}/login`);
+    this._checkGatewayError(r1);
     const token1 = this.extractToken(r1.data);
     if (!token1) throw new IdMeError('未能从登录页提取 CSRF Token', 'TOKEN_MISSING');
 
@@ -218,12 +315,11 @@ class IdMeService {
       { _token: token1, ic }, {
         Origin: IDME_ORIGIN,
         Referer: `${IDME_ORIGIN}/login`,
-      });
+      }, { retry: 0 });
+    this._checkGatewayError(r2);
     const body2 = typeof r2.data === 'string' ? r2.data : '';
     // 官方通过校验才返回表单页；无 form 即 IC 无效（与 NAS 版实现一致）
     if (!/<form/i.test(body2)) {
-      // detail.alert 携带官方页面原文（马来文），供 i18n 层拼进用户文案；
-      // message 仍是开发者向中文，两者不共用。
       throw new IdMeError(`身份证校验未通过${extractAlert(body2)}`, 'BAD_IC', false,
         { alert: extractAlert(body2) });
     }
@@ -234,41 +330,38 @@ class IdMeService {
       { _token: token2, check: '2', ic, password }, {
         Origin: IDME_ORIGIN,
         Referer: `${IDME_ORIGIN}/daftarawam/semakanverification`,
-      });
+      }, { retry: 0 });
+    this._checkGatewayError(r3);
     const body3 = typeof r3.data === 'string' ? r3.data : '';
     // 官方判定登录成功的方式是重定向到 /home；仅靠文本匹配会漏判
-    // （实测：密码错时服务端 302 回 /login，正文并无 "tidak sah" 字样）
     const finalUrl = r3.url || '';
     const loggedIn = finalUrl
       ? (/\/home/.test(finalUrl) || !/\/login/.test(finalUrl))
       : !/Kata laluan tidak sah|tidak sepadan/i.test(body3);
     if (!loggedIn) {
-      // 密码错时服务端 302 回 /login，正文通常不含 alert 块，故 detail.alert 可能为空 ——
-      // 此时 i18n 模板的 {alert} 渲染成空串，整句仍是完整的（见 i18n.js errBadCred）。
       throw new IdMeError(`登录失败${extractAlert(body3) || '：身份证号或密码不正确'}`, 'BAD_CREDENTIAL',
         false, { alert: extractAlert(body3) });
     }
 
-    // 第 4 步是整条登录链路里最慢的一段：三跳串行，且最后一跳
-    // 要下载 195 KB 的出勤页（68 个 <script>，Laravel 服务端渲染）。
-    // 每一步各报一次进度 —— 否则界面上只有一个静止的「4/4」，
-    // 教师会以为卡死而反复点登录（那反而会触发 Imperva WAF 的速率判定）。
     onProgress('4/4', 'bootStep4a');
     const rApp = await this.request('GET', `${IDME_ORIGIN}/list_aplikasi`, null, {
       Referer: `${IDME_ORIGIN}/home`,
     });
+    this._checkGatewayError(rApp);
     const ssoUrl = this.extractSsoUrl(typeof rApp.data === 'string' ? rApp.data : '');
     if (!ssoUrl) {
       throw new IdMeError('门户应用列表中未找到 Pengurusan Murid 入口', 'SSO_ENTRY_MISSING');
     }
 
     onProgress('4/4', 'bootStep4b');
-    await this.request('GET', ssoUrl, null, { Referer: `${IDME_ORIGIN}/list_aplikasi` });
+    const rSso = await this.request('GET', ssoUrl, null, { Referer: `${IDME_ORIGIN}/list_aplikasi` });
+    this._checkGatewayError(rSso);
 
     onProgress('4/4', 'bootStep4c');
     const rTab = await this.request('GET', `${MOEIS_ORIGIN}/sahsiah/kehadiran/tabguru`, null, {
       Referer: `${MOEIS_ORIGIN}/`,
     });
+    this._checkGatewayError(rTab);
     const htmlTab = typeof rTab.data === 'string' ? rTab.data : '';
     this.moeisToken = this.extractToken(htmlTab);
     if (!this.moeisToken) {
@@ -277,9 +370,6 @@ class IdMeService {
 
     this._parseClasses(htmlTab);
     this._parseTeacherInfo(htmlTab);
-    // 登录后必须能定位到班级，否则后续每次操作都会在 currentClass() 处失败，
-    // 而那时的报错（「未获取到负责班级」）已经丢失了真正的上下文。
-    // 在这里就分两种情形给出精确 code（见 _parseClasses 的注释）。
     if (!this.classes.length) {
       throw new IdMeError(
         this._classParseState === 'no-select'

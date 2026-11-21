@@ -3,13 +3,13 @@
   <LoginView v-if="!isReady"
              v-model:ic="cred.ic"
              v-model:password="cred.password"
-             :busy="busy" :error="bootError" :progress="progressText"
+             :busy="busy" :error="bootError" :progress="progressText" :progress-pct="progressPct"
              @submit="doLogin" />
 
   <!-- ==================== 主界面 ==================== -->
   <div v-else class="app">
     <TopBar :class-name="className" :class-count="classes.length"
-            :online="online" :select-mode="selectMode"
+            :online="online" :busy="busy" :select-mode="selectMode"
             :update-badge="updState === 'available'"
             @pick-class="showClassSheet = true"
             @exit-select="selection.toggleSelectMode()"
@@ -28,7 +28,9 @@
                @invert="selection.invert(allIds)"
                @none="selection.selectNone()" />
 
-    <div v-if="notice" class="alert" :class="notice.type">{{ notice.text }}</div>
+    <Transition name="toast">
+      <div v-if="notice" class="alert" :class="notice.type">{{ notice.text }}</div>
+    </Transition>
     <!-- 常驻横幅：未来日期 / 学期假 / 特别假 / 官方不允许录入 / 该日期无名单。
          这些情况下按钮是停用的，理由必须一直留在屏幕上（notice 4 秒就消失了）。 -->
     <div v-if="bannerText" class="alert alert-amber">{{ bannerText }}</div>
@@ -95,6 +97,7 @@
 // 拆分背景：本文件曾达 592 行，超过项目「源文件 ≤ 499 行」门禁。
 import { ref, computed, onMounted } from 'vue';
 import { App as CapApp } from '@capacitor/app';
+import { loadHomeCache, saveHomeCache, clearHomeCache } from './draft.js';
 // 凭据走 Android Keystore 加密（见 credStore.js 顶部注释）。
 // 别名导入是为了避开本文件里同名的 clearCred() —— 那个是界面动作，
 // 这个只负责落盘，语义不同但名字撞了。
@@ -130,10 +133,21 @@ import UpdateSheet from './UpdateSheet.vue';
 import ConfirmSheet from './ConfirmSheet.vue';
 
 // ---------------------------------------------------------------- 认证与界面开关
+const STEP_PCT = {
+  bootResume: 35,
+  bootStep1: 25,
+  bootStep2: 45,
+  bootStep3: 65,
+  bootStep4a: 80,
+  bootStep4b: 90,
+  bootStep4c: 98,
+};
+
 const cred = ref({ ic: '', password: '' });
 const isReady = ref(false);
 const bootError = ref('');
 const progressText = ref('');
+const progressPct = ref(0);
 const classes = ref([]);
 const currentClassIdx = ref(0);
 
@@ -210,10 +224,10 @@ const att = useAttendance({
   ask,
 });
 const {
-  busy, online, notice, students, currentDate, isVerified, reasonTarget,
+  busy, online, notice, students, currentDate, isVerified, statushari, reasonTarget,
   bilAbsen, bilExcused, bilHadir, pending, attendanceRate, dateDisplay, allIds,
   readOnly, readOnlyReason, bannerText, canGoNext, showStatusTag,
-  notify, loadAttendance, applyAllPdpr, submit,
+  notify, loadAttendance, hydrateSnapshot, clearDayCache, applyAllPdpr, submit,
   onRowTap, onRowLongPress, openBatchReason, pickReason, markPresent, markSelectedPresent,
   shiftDate, jumpToday,
   reasonTitle, reasonSubtitle, reasonSelectedCode, reasonPresentLabel,
@@ -226,21 +240,36 @@ const className = computed(() => classes.value[currentClassIdx.value]?.name || '
 const categories = computed(() => groupByCategory());
 const sebabCount = computed(() => allSebab().length);
 
-async function doLogin() {
+function persistHomeSnapshot() {
+  if (!classes.value.length || !students.value.length) return;
+  saveHomeCache({
+    classes: classes.value,
+    currentClassIdx: currentClassIdx.value,
+    date: currentDate.value,
+    students: students.value,
+    isVerified: isVerified.value,
+    statushari: statushari.value,
+  });
+}
+
+async function doLogin({ tryResume = false, silentBoot = false } = {}) {
   if (!cred.value.ic || !cred.value.password) {
     bootError.value = t('needCred');
     return;
   }
   busy.value = true;
   bootError.value = '';
+  progressPct.value = 12;
   try {
-    // 回调给的是 i18n key（服务层不持有界面语言），这里才翻译。
-    // t() 内部读 lang.value，但登录页渲染时 lang 已由 loadLang() 定好，
-    // 无需 watch —— 登录过程中用户不可能切换语言。
-    await idme.login(cred.value.ic, cred.value.password, (step, descKey) => {
-      progressText.value = `[${step}] ${t(descKey)}`;
-    });
-    // 存不上不阻断登录 —— 只影响下次是否要重输，登录本身已经成功了。
+    const onProgress = (step, descKey) => {
+      progressText.value = step ? `[${step}] ${t(descKey)}` : t(descKey);
+      progressPct.value = STEP_PCT[descKey] || progressPct.value;
+    };
+    const resumed = tryResume && await idme.tryResumeSession(onProgress);
+    if (!resumed) {
+      await idme.login(cred.value.ic, cred.value.password, onProgress);
+    }
+    progressPct.value = 100;
     await saveStoredCred({ ic: cred.value.ic, password: cred.value.password });
 
     classes.value = idme.classes.slice();
@@ -249,30 +278,47 @@ async function doLogin() {
     isReady.value = true;
     progressText.value = '';
     await loadAttendance(currentDate.value);
+    persistHomeSnapshot();
 
-    // 后台预热当前月报表：官方月度报表页约 350KB，冷开 2~3 秒。
-    // 登录后立刻拉一次，教师点开 Laporan 就是秒开（不 await，不阻塞界面）。
     const my = monthYearOf(currentDate.value);
     if (my) idme.prefetchMonthlyReport(my.m, my.y);
+    updCheck({ silent: true });
   } catch (err) {
     online.value = false;
-    bootError.value = errText(err);
-    isReady.value = false;
+    const isAuthErr = err?.code === 'BAD_CREDENTIAL' || err?.code === 'BAD_IC';
+    if (silentBoot && isReady.value && !isAuthErr) {
+      notify(t('syncFail', { msg: errText(err) }), 'alert-red');
+    } else {
+      bootError.value = errText(err);
+      isReady.value = false;
+    }
   } finally {
     busy.value = false;
+    progressPct.value = 0;
   }
 }
 
 async function init() {
   currentDate.value = todayStr();
-  // 先搬旧版明文，再读 —— 顺序不能反：迁移前读取只会读到空值，
-  // 结果就是老用户升级后被要求重新输一次密码。
   await migrateLegacyCred();
   const saved = await loadStoredCred();
   if (saved.ic) cred.value.ic = saved.ic;
   if (saved.password) cred.value.password = saved.password;
 
-  if (cred.value.ic && cred.value.password) await doLogin();
+  if (cred.value.ic && cred.value.password) {
+    // 首屏秒开：有 24 小时内的本地缓存快照则 0.1s 先呈现主界面，后台静默验活同步
+    const snap = await loadHomeCache();
+    let silentBoot = false;
+    if (snap && Array.isArray(snap.classes) && snap.classes.length && hydrateSnapshot(snap)) {
+      classes.value = snap.classes;
+      currentClassIdx.value = Math.min(snap.currentClassIdx || 0, snap.classes.length - 1);
+      isReady.value = true;
+      silentBoot = true;
+    }
+    await doLogin({ tryResume: true, silentBoot });
+  } else {
+    setTimeout(() => { updCheck({ silent: true }); }, 1500);
+  }
 }
 
 async function saveAndRelogin() {
@@ -284,6 +330,8 @@ async function saveAndRelogin() {
 async function clearCred() {
   cred.value = { ic: '', password: '' };
   await clearStoredCred();
+  clearDayCache();
+  clearHomeCache();
   isReady.value = false;
   students.value = [];
   online.value = false;
@@ -347,9 +395,5 @@ useBackButton([
 onMounted(async () => {
   await loadLang();      // 先定语言，再渲染登录页 / 主界面
   init();
-  // 启动时静默检查更新：延迟 3 秒再发，避开登录首屏的网络竞争
-  // （登录本身要串行走 4 个官方页面，此时再抢带宽只会让老师多等）。
-  // silent 模式下网络失败不提示 —— 教室没网是常态，不该弹错误。
-  setTimeout(() => { updCheck({ silent: true }); }, 3000);
 });
 </script>

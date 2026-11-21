@@ -53,6 +53,7 @@ const DICT = {
     // 少一行说明反而更像一张手账封面。键已随之删除，不留死词条。
     // 登录四步进度。原本硬编码在 idmeCore.login() 的中文里，绕过 i18n，
     // 导致国文界面下仍冒出中文。改为 key 后由 App.vue 用 t() 翻译。
+    bootResume: 'Menyemak sesi sedia ada…',
     bootStep1: 'Menyambung ke portal idMe…',
     bootStep2: 'Mengesahkan No. Kad Pengenalan…',
     bootStep3: 'Mengesahkan kata laluan dan membuka sesi…',
@@ -280,6 +281,8 @@ const DICT = {
     errSessionLost: 'Sesi telah tamat. Sila daftar masuk semula.',
     errParse: 'Gagal membaca data kehadiran daripada pelayan.',
     errNetwork: 'Tiada sambungan internet atau pelayan tidak dapat dihubungi.',
+    errWafBlocked: 'Sekatan keselamatan sementara portal idMe. Sila cuba lagi sebentar lagi.',
+    errServerBusy: 'Pelayan rasmi idMe sedang sibuk. Sila cuba sebentar lagi.',
     errUnknown: 'Ralat tidak dijangka. Sila cuba lagi.',
   },
 
@@ -288,6 +291,7 @@ const DICT = {
     // 品牌名不翻译：中文界面下同样显示 "idMe Attendance"，与 authorSign 同理。
     appTitle: 'Attendance',
     // 封面副标题已按用户要求移除（见 ms 字典同处的说明）。
+    bootResume: '正在检测本地会话…',
     bootStep1: '正在连接 idMe 门户…',
     bootStep2: '正在校验身份证号…',
     bootStep3: '正在验证密码并建立会话…',
@@ -479,6 +483,8 @@ const DICT = {
     errSessionLost: '会话已失效，请重新登录。',
     errParse: '无法解析服务端返回的出勤数据。',
     errNetwork: '网络不可用或服务器无法连接。',
+    errWafBlocked: '触发官方安全防火墙临时限流，请稍候几秒再试。',
+    errServerBusy: '官方服务器暂时繁忙，请稍后再试。',
     errUnknown: '发生未知错误，请重试。',
   },
 
@@ -494,6 +500,7 @@ const DICT = {
     // ── 启动 / 登录 ──
     appTitle: 'Attendance',                       // 品牌名，与语言无关
     // 封面副标题已按用户要求移除（见 ms 字典同处的说明）。
+    bootResume: 'Checking existing session…',
     bootStep1: 'Connecting to idMe portal…',
     bootStep2: 'Verifying IC number…',
     bootStep3: 'Verifying password and opening session…',
@@ -681,6 +688,8 @@ const DICT = {
     errSessionLost: 'Session expired. Please sign in again.',
     errParse: 'Failed to read attendance data from the server.',
     errNetwork: 'No internet connection or server unreachable.',
+    errWafBlocked: 'Temporarily blocked by idMe security firewall. Please wait a few seconds and retry.',
+    errServerBusy: 'Official idMe server is busy. Please try again shortly.',
     errUnknown: 'Unexpected error. Please try again.',
   },
 };

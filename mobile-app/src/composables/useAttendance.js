@@ -196,8 +196,36 @@ export function useAttendance({ relogin, selection, ask }) {
     editVersion.value++;
   }
 
-  // ---------------------------------------------------------------- 加载
+  // ---------------------------------------------------------------- 加载与内存快切
+  // 同会话翻日期内存缓存（key = classId::dateStr）：先瞬显缓存、再后台拉最新。
+  const dayCache = new Map();
+
+  /** 冷启动首屏快照注入：不等待网络，0.1s 先呈现上次班级与名单 */
+  function hydrateSnapshot(snap) {
+    if (!snap || !Array.isArray(snap.students) || !snap.students.length) return false;
+    students.value = snap.students.map(s => ({ ...s }));
+    baseline.value = null;
+    isVerified.value = !!snap.isVerified;
+    currentDate.value = snap.date || todayStr();
+    statushari.value = Number(snap.statushari) || 0;
+    today.value = todayStr();
+    restoredFromDraft.value = false;
+    return true;
+  }
+
+  function clearDayCache() { dayCache.clear(); }
+
   async function loadAttendance(dateStr, retried = false) {
+    const clsNow = idme.currentClass();
+    const cacheKey = clsNow ? `${clsNow.id}::${dateStr}` : '';
+    if (cacheKey && dayCache.has(cacheKey) && !retried) {
+      const hit = dayCache.get(cacheKey);
+      students.value = hit.students.map(s => ({ ...s }));
+      baseline.value = hit.baseline;
+      isVerified.value = hit.isVerified;
+      currentDate.value = dateStr;
+      statushari.value = hit.statushari;
+    }
     busy.value = true;
     try {
       const res = await idme.getAttendance(dateStr);
@@ -209,6 +237,15 @@ export function useAttendance({ relogin, selection, ask }) {
       today.value = todayStr();
       online.value = true;
       restoredFromDraft.value = false;
+
+      if (cacheKey) {
+        dayCache.set(cacheKey, {
+          students: res.students.map(s => ({ ...s })),
+          baseline: res.baseline,
+          isVerified: res.isVerified,
+          statushari: statushari.value,
+        });
+      }
 
       // ---- 恢复未提交草稿 ----
       // 只在「该日期可录入」时恢复：假期 / 未来日期本来就不该有草稿，
@@ -582,7 +619,7 @@ export function useAttendance({ relogin, selection, ask }) {
     isFuture, canGoNext, notRecordable, readOnly, readOnlyReason,
     emptyRoster, bannerText, showStatusTag,
     // 操作
-    notify, applyState, loadAttendance, applyAllPdpr, submit,
+    notify, applyState, loadAttendance, hydrateSnapshot, clearDayCache, applyAllPdpr, submit,
     onRowTap, onRowLongPress, openBatchReason, pickReason, markPresent, markSelectedPresent,
     shiftDate, jumpToday, flushDraft,
     // 假因抽屉展示态
