@@ -52,10 +52,11 @@
     </a>
 
     <nav class="nav" aria-label="Seksyen">
-      <a href="#info"     data-i18n="navInfo">Maklumat Fail</a>
-      <a href="#install"  data-i18n="navInstall">Pemasangan</a>
-      <a href="#features" data-i18n="navFeatures">Ciri-ciri</a>
-      <a href="#faq"      data-i18n="navFaq">Soalan Lazim</a>
+      <a href="#info"      data-i18n="navInfo">Maklumat Fail</a>
+      <a href="#changelog" data-i18n="navChangelog">Log Kemas Kini</a>
+      <a href="#install"   data-i18n="navInstall">Pemasangan</a>
+      <a href="#features"  data-i18n="navFeatures">Ciri-ciri</a>
+      <a href="#faq"       data-i18n="navFaq">Soalan Lazim</a>
     </nav>
 
     <div class="lang" role="group" aria-label="Pilih Bahasa">
@@ -77,7 +78,7 @@
           <!-- 版本 / 体积由 app.js 从 version.json 注入（data-live 标记）。
                下面的内联值只是首屏未执行 JS 前的一帧占位，也是 file:// 打开
                （fetch 被 CORS 挡）时的兜底 —— 不再是需要手工同步的第二事实源。 -->
-          <span class="chip">Android · <span data-live="size">3.0 MB</span></span>
+          <span class="chip">Android · v<span data-live="version">1.4</span> · <span data-live="published">2026-11-21</span> · <span data-live="size">2.9 MB</span></span>
           <h1 data-i18n="brand">idMe Kehadiran Pantas</h1>
           <p class="hero-sub" data-i18n="brandSub">Kementerian Pendidikan Malaysia · MOE Integrated System</p>
           <p class="hero-tag" data-i18n="tagline">Alat bantu guru merekod kehadiran murid.</p>
@@ -144,6 +145,48 @@
     <p class="warn" data-i18n="upgradeWarn">
       Sudah pasang versi lama? Nyahpasang dahulu, kemudian pasang versi ini.
     </p>
+  </section>
+
+  <!-- ══════════════ 更新日志 ══════════════ -->
+  <section class="card changelog-card" id="changelog">
+    <h2 class="sec-title" data-i18n="clTitle">Log Kemas Kini</h2>
+    <p class="sec-sub" data-i18n="clSub">Sejarah versi dan tarikh keluaran terkini.</p>
+
+    <div class="cl-list">
+      <article class="cl-item cl-item-latest">
+        <div class="cl-head">
+          <span class="cl-ver">v1.4</span>
+          <span class="cl-badge" data-i18n="clLatest">Terkini</span>
+          <time class="cl-date" datetime="2026-11-21">2026-11-21</time>
+        </div>
+        <ul class="cl-ul">
+          <li data-i18n="cl14_1">Membaiki isu log masuk perlahan atau gagal (sambung semula sesi automatik, bersih kuki lama &amp; pengesanan WAF/419).</li>
+          <li data-i18n="cl14_2">Antara muka baharu gaya E-Ink kontras tinggi serta ikon baharu hitam-putih-merah — murid tidak hadir terus kelihatan.</li>
+          <li data-i18n="cl14_3">Buka serta-merta daripada cache tempatan, tukar tarikh pantas &amp; animasi maklum balas halus.</li>
+        </ul>
+      </article>
+
+      <article class="cl-item">
+        <div class="cl-head">
+          <span class="cl-ver">v1.3</span>
+          <time class="cl-date" datetime="2026-10-18">2026-10-18</time>
+        </div>
+        <ul class="cl-ul">
+          <li data-i18n="cl13_1">Menambah sokongan Bahasa Inggeris (BM / EN / 中文).</li>
+          <li data-i18n="cl13_2">Peratus kehadiran penuh dipaparkan tanpa titik perpuluhan (100%) dan label statistik lebih besar.</li>
+        </ul>
+      </article>
+
+      <article class="cl-item">
+        <div class="cl-head">
+          <span class="cl-ver">v1.0.0</span>
+          <time class="cl-date" datetime="2026-10-16">2026-10-16</time>
+        </div>
+        <ul class="cl-ul">
+          <li data-i18n="cl10_1">Keluaran pertama: satu ketikan semua hadir / PDPR, sokongan tiga keadaan kehadiran, laporan bulanan &amp; eksport PDF.</li>
+        </ul>
+      </article>
+    </div>
   </section>
 
   <!-- ══════════════ 安装步骤 ══════════════ -->

@@ -427,6 +427,61 @@ main > :last-child { margin-bottom: 72px; }
 .foot-in p { font-size: 13.5px; }
 .foot-in p + p { margin-top: 6px; }
 
+/* ══════════════ 更新日志（Changelog） ══════════════ */
+.cl-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 18px;
+}
+.cl-item {
+  padding: 16px 18px;
+  border-radius: var(--r-sm);
+  background: var(--paper);
+  border: 1px solid var(--line);
+}
+.cl-item-latest {
+  background: var(--surface);
+  border: 1.5px solid var(--ink);
+}
+.cl-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.cl-ver {
+  font-family: var(--f-num);
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--ink);
+}
+.cl-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: var(--r-pill);
+  background: var(--ink);
+  color: #ffffff;
+}
+.cl-date {
+  margin-left: auto;
+  font-family: var(--f-num);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+.cl-ul {
+  margin: 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 14.5px;
+  color: var(--ink);
+}
+.cl-ul li { line-height: 1.55; }
+
 /* ══════════════ 响应式 ══════════════ */
 @media (max-width: 900px) {
   .nav { display: none; }

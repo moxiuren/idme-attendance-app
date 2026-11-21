@@ -25,6 +25,7 @@ const I18N = {
     install: 'Cara Pemasangan',
 
     navInfo: 'Maklumat Fail',
+    navChangelog: 'Log Kemas Kini',
     navInstall: 'Pemasangan',
     navFeatures: 'Ciri-ciri',
     navFaq: 'Soalan Lazim',
@@ -41,6 +42,16 @@ const I18N = {
     verifyBody: 'Sebelum memasang, bandingkan cap jari sijil APK ini dengan nilai di atas. Jika berbeza, jangan pasang — muat turun semula daripada sumber asal.',
     upgradeWarn: 'Sudah pasang versi lama? Nyahpasang dahulu. Versi ini ditandatangani dengan kunci baharu, jadi Android tidak membenarkan ia menimpa versi lama — anda hanya akan nampak "Aplikasi tidak dipasang". Rekod draf pada peranti akan hilang.',
     fNotes: 'Perubahan',
+
+    clTitle: 'Log Kemas Kini',
+    clSub: 'Sejarah versi dan tarikh keluaran terkini.',
+    clLatest: 'Terkini',
+    cl14_1: 'Membaiki isu log masuk perlahan atau gagal (sambung semula sesi automatik, bersih kuki lama & pengesanan WAF/419).',
+    cl14_2: 'Antara muka baharu gaya E-Ink kontras tinggi serta ikon baharu hitam-putih-merah — murid tidak hadir terus kelihatan.',
+    cl14_3: 'Buka serta-merta daripada cache tempatan, tukar tarikh pantas & animasi maklum balas halus.',
+    cl13_1: 'Menambah sokongan Bahasa Inggeris (BM / EN / 中文).',
+    cl13_2: 'Peratus kehadiran penuh dipaparkan tanpa titik perpuluhan (100%) dan label statistik lebih besar.',
+    cl10_1: 'Keluaran pertama: satu ketikan semua hadir / PDPR, sokongan tiga keadaan kehadiran, laporan bulanan & eksport PDF.',
 
     stepTitle: 'Cara Pemasangan',
     stepSub: 'Empat langkah, tidak sampai seminit.',
@@ -96,6 +107,7 @@ const I18N = {
     install: '安装说明',
 
     navInfo: '文件信息',
+    navChangelog: '更新日志',
     navInstall: '安装',
     navFeatures: '功能',
     navFaq: '常见问题',
@@ -112,6 +124,16 @@ const I18N = {
     verifyBody: '安装前可以把 APK 的证书指纹和上面这串对比。对不上就不要装，请回到原始来源重新下载。',
     upgradeWarn: '装过旧版？请先卸载再装这一版。本版换了签名密钥，Android 不允许它覆盖旧版 —— 你只会看到「应用未安装」。卸载会丢掉本机草稿。',
     fNotes: '本版变化',
+
+    clTitle: '更新日志',
+    clSub: '版本迭代记录与发布日期。',
+    clLatest: '最新',
+    cl14_1: '修复偶发登录过慢或登录失败（新增冷启动会话秒进、登录前清场去双轨 Cookie 冲突与 WAF/419 精准识别）。',
+    cl14_2: '全新墨水屏高对比极速界面与黑白朱红新图标，缺席/PDPR 学生一眼锁定。',
+    cl14_3: '新增首屏本地缓存秒开、同会话翻日期瞬切及 5 处克制微反馈动画。',
+    cl13_1: '新增英文界面（支持 BM / EN / 中文三语切换）。',
+    cl13_2: '出勤率满值优化为无小数显示（100%），统计条标签字号加大并居中。',
+    cl10_1: '首发版本：一键全勤 / PDPR、三态出勤识别、月度报表月历与 PDF 导出。',
 
     stepTitle: '安装步骤',
     stepSub: '四步，不到一分钟。',
