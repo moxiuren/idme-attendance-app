@@ -78,7 +78,7 @@
           <!-- 版本 / 体积由 app.js 从 version.json 注入（data-live 标记）。
                下面的内联值只是首屏未执行 JS 前的一帧占位，也是 file:// 打开
                （fetch 被 CORS 挡）时的兜底 —— 不再是需要手工同步的第二事实源。 -->
-          <span class="chip">Android · v<span data-live="version">1.4</span> · <span data-live="published">2026-11-21</span> · <span data-live="size">2.9 MB</span></span>
+          <span class="chip">Android · v<span data-live="version">1.4.1</span> · <span data-live="published">2026-11-26</span> · <span data-live="size">2.9 MB</span></span>
           <h1 data-i18n="brand">idMe Kehadiran Pantas</h1>
           <p class="hero-sub" data-i18n="brandSub">Kementerian Pendidikan Malaysia · MOE Integrated System</p>
           <p class="hero-tag" data-i18n="tagline">Alat bantu guru merekod kehadiran murid.</p>
@@ -87,7 +87,7 @@
 
       <div class="hero-side">
         <a class="btn-dl" id="dlTop"
-           href="https://github.com/moxiuren/idme-attendance-app/releases/download/v1.4/idMe-v1.4.apk"
+           href="https://github.com/moxiuren/idme-attendance-app/releases/download/v1.4.1/idMe-v1.4.1.apk"
            rel="noopener" download
            data-goatcounter-click="dl-top"
            data-goatcounter-title="首屏下载按钮">
@@ -98,7 +98,7 @@
             </svg>
           </span>
           <span class="btn-dl-main" data-i18n="dl">Muat Turun APK</span>
-          <span class="btn-dl-sub">v<span data-live="version">1.4</span> · <span data-live="size">2.9 MB</span></span>
+          <span class="btn-dl-sub">v<span data-live="version">1.4.1</span> · <span data-live="size">2.9 MB</span></span>
         </a>
         <a class="btn-ghost" href="#install" data-i18n="install">Cara Pemasangan</a>
         <p class="hero-fine" data-i18n="dlNote">Perlu Android 7.0 ke atas · Benarkan pemasangan daripada sumber tidak diketahui</p>
@@ -123,10 +123,10 @@
     <h2 class="sec-title" data-i18n="infoTitle">Maklumat Fail</h2>
     <dl class="info-grid">
       <div><dt data-i18n="fVersion">Versi</dt>
-        <dd><span data-live="version">1.4</span> <span class="dim">(code <span data-live="code">5</span>)</span></dd></div>
+        <dd><span data-live="version">1.4.1</span> <span class="dim">(code <span data-live="code">6</span>)</span></dd></div>
       <div><dt data-i18n="fSize">Saiz Fail</dt><dd data-live="size">2.9 MB</dd></div>
       <div><dt data-i18n="fReq">Keperluan Sistem</dt><dd>Android 7.0+ <span class="dim">(API 24)</span></dd></div>
-      <div><dt data-i18n="fUpdated">Dikemas kini</dt><dd data-live="published">2026-11-21</dd></div>
+      <div><dt data-i18n="fUpdated">Dikemas kini</dt><dd data-live="published">2026-11-26</dd></div>
       <div class="span2"><dt data-i18n="fPkg">Nama Pakej</dt>
         <dd><code>my.gov.moe.idme.attendance</code></dd></div>
       <div class="span2"><dt data-i18n="fCert">Cap Jari Sijil (SHA-256)</dt>
@@ -155,8 +155,19 @@
     <div class="cl-list">
       <article class="cl-item cl-item-latest">
         <div class="cl-head">
-          <span class="cl-ver">v1.4</span>
+          <span class="cl-ver">v1.4.1</span>
           <span class="cl-badge" data-i18n="clLatest">Terkini</span>
+          <time class="cl-date" datetime="2026-11-26">2026-11-26</time>
+        </div>
+        <ul class="cl-ul">
+          <li data-i18n="cl141_1">Membaiki isu tarikh kekal pada hari log masuk asal apabila membuka semula aplikasi dengan sesi tersimpan — kini sentiasa beralih ke tarikh hari ini secara automatik.</li>
+          <li data-i18n="cl141_2">Menambah penyegaran tarikh automatik merentas tengah malam apabila aplikasi dibuka semula dari latar belakang.</li>
+        </ul>
+      </article>
+
+      <article class="cl-item">
+        <div class="cl-head">
+          <span class="cl-ver">v1.4</span>
           <time class="cl-date" datetime="2026-11-21">2026-11-21</time>
         </div>
         <ul class="cl-ul">
@@ -266,10 +277,10 @@
   <section class="card endcard">
     <div>
       <h2 class="end-title" data-i18n="brand">idMe Kehadiran Pantas</h2>
-      <p class="end-sub">v<span data-live="version">1.4</span> · <span data-live="size">2.9 MB</span> · Android 7.0+</p>
+      <p class="end-sub">v<span data-live="version">1.4.1</span> · <span data-live="size">2.9 MB</span> · Android 7.0+</p>
     </div>
     <a class="btn-dl btn-dl-sm" id="dlBottom"
-       href="https://github.com/moxiuren/idme-attendance-app/releases/download/v1.4/idMe-v1.4.apk"
+       href="https://github.com/moxiuren/idme-attendance-app/releases/download/v1.4.1/idMe-v1.4.1.apk"
        rel="noopener" download
        data-goatcounter-click="dl-bottom"
        data-goatcounter-title="页尾下载按钮">

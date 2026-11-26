@@ -200,15 +200,18 @@ export function useAttendance({ relogin, selection, ask }) {
   // 同会话翻日期内存缓存（key = classId::dateStr）：先瞬显缓存、再后台拉最新。
   const dayCache = new Map();
 
-  /** 冷启动首屏快照注入：不等待网络，0.1s 先呈现上次班级与名单 */
+  /** 冷启动首屏快照注入：仅当天快照才 0.1s 先呈现名单，跨日绝不回写旧日期 */
   function hydrateSnapshot(snap) {
-    if (!snap || !Array.isArray(snap.students) || !snap.students.length) return false;
+    const nowDate = todayStr();
+    today.value = nowDate;
+    currentDate.value = nowDate;
+    if (!snap || snap.date !== nowDate || !Array.isArray(snap.students) || !snap.students.length) {
+      return false;
+    }
     students.value = snap.students.map(s => ({ ...s }));
     baseline.value = null;
     isVerified.value = !!snap.isVerified;
-    currentDate.value = snap.date || todayStr();
     statushari.value = Number(snap.statushari) || 0;
-    today.value = todayStr();
     restoredFromDraft.value = false;
     return true;
   }
@@ -612,7 +615,7 @@ export function useAttendance({ relogin, selection, ask }) {
 
   return {
     // 状态
-    busy, online, notice, students, currentDate, isVerified, baseline, reasonTarget,
+    busy, online, notice, students, currentDate, today, isVerified, baseline, reasonTarget,
     statushari, restoredFromDraft,
     // 计算
     bilAbsen, bilExcused, bilHadir, pending, attendanceRate, dateDisplay, changed, allIds,

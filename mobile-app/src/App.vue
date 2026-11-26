@@ -95,7 +95,7 @@
 <script setup>
 // 顶层编排：持有认证状态与界面开关，出勤域逻辑全部委托给 useAttendance。
 // 拆分背景：本文件曾达 592 行，超过项目「源文件 ≤ 499 行」门禁。
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { App as CapApp } from '@capacitor/app';
 import { loadHomeCache, saveHomeCache, clearHomeCache } from './draft.js';
 // 凭据走 Android Keystore 加密（见 credStore.js 顶部注释）。
@@ -224,7 +224,7 @@ const att = useAttendance({
   ask,
 });
 const {
-  busy, online, notice, students, currentDate, isVerified, statushari, reasonTarget,
+  busy, online, notice, students, currentDate, today, isVerified, statushari, reasonTarget,
   bilAbsen, bilExcused, bilHadir, pending, attendanceRate, dateDisplay, allIds,
   readOnly, readOnlyReason, bannerText, canGoNext, showStatusTag,
   notify, loadAttendance, hydrateSnapshot, clearDayCache, applyAllPdpr, submit,
@@ -242,6 +242,7 @@ const sebabCount = computed(() => allSebab().length);
 
 function persistHomeSnapshot() {
   if (!classes.value.length || !students.value.length) return;
+  if (currentDate.value !== todayStr()) return;
   saveHomeCache({
     classes: classes.value,
     currentClassIdx: currentClassIdx.value,
@@ -277,6 +278,7 @@ async function doLogin({ tryResume = false, silentBoot = false } = {}) {
     online.value = true;
     isReady.value = true;
     progressText.value = '';
+    currentDate.value = todayStr();
     await loadAttendance(currentDate.value);
     persistHomeSnapshot();
 
@@ -392,8 +394,22 @@ useBackButton([
   CapApp.exitApp();
 });
 
+let appStateHandle = null;
+
 onMounted(async () => {
   await loadLang();      // 先定语言，再渲染登录页 / 主界面
   init();
+  appStateHandle = await CapApp.addListener('appStateChange', ({ isActive }) => {
+    if (!isActive || !isReady.value || busy.value) return;
+    const nowDate = todayStr();
+    if (nowDate === today.value) return;
+    today.value = nowDate;
+    if (att.changed.value) return;
+    loadAttendance(nowDate).then(() => persistHomeSnapshot());
+  });
+});
+
+onUnmounted(() => {
+  appStateHandle?.remove();
 });
 </script>

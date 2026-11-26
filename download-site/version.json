@@ -1,13 +1,13 @@
 {
-  "versionCode": 5,
-  "versionName": "1.4",
-  "apk": "https://github.com/moxiuren/idme-attendance-app/releases/download/v1.4/idMe-v1.4.apk",
-  "sha256": "1d8a22b22f83f2b0b0a636b13fbe27055d3a16baf10a8510e66488ce17dcfb66",
-  "size": 3043867,
-  "published": "2026-11-21",
+  "versionCode": 6,
+  "versionName": "1.4.1",
+  "apk": "https://github.com/moxiuren/idme-attendance-app/releases/download/v1.4.1/idMe-v1.4.1.apk",
+  "sha256": "1aa2945f1d72058192e67e61a8c2556bf0d6e96ae308da5836a38b47793f5029",
+  "size": 3043998,
+  "published": "2026-11-26",
   "notes": {
-    "ms": "Membaiki isu log masuk perlahan/gagal (sambung semula sesi automatik, pengesanan WAF/419). Antara muka baharu gaya E-Ink kontras tinggi yang lebih ringkas dan pantas.",
-    "en": "Fixed intermittent slow/failed login (auto session resume, WAF/419 detection). Redesigned with a crisp high-contrast E-Ink Focus interface.",
-    "zh": "修复偶发登录过慢/登录失败（新增冷启动会话秒进、防双轨 Cookie 冲突与 WAF/419 识别）。全新墨水屏高对比极速界面，异常学生一眼锁定。"
+    "ms": "Membaiki isu tarikh tidak bertukar secara automatik ke hari ini apabila membuka semula aplikasi selepas sesi disambung semula.",
+    "en": "Fixed an issue where reopening the app with a resumed session stayed on the previous login date instead of switching to today.",
+    "zh": "修复会话保持后重新打开应用仍停留在登录当日、未自动切换到当天日期的问题，并补齐后台切回前台跨日自动刷新。"
   }
 }
